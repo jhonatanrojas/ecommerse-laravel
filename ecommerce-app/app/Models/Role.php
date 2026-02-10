@@ -44,11 +44,5 @@ class Role extends Model
         return 'uuid';
     }
 
-    /**
-     * The users that belong to the role.
-     */
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'role_user', 'role_id', 'user_id');
-    }
+    // La relación con usuarios ahora es manejada por Spatie\Permission.
 }

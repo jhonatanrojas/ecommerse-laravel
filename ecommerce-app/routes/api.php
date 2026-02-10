@@ -29,6 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/{product}', [ProductController::class, 'show']);
 
+// Home Configuration (Public API)
+Route::get('home-configuration', [\App\Http\Controllers\Api\HomeConfigurationController::class, 'index']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('products', [ProductController::class, 'store']);
     Route::put('products/{product}', [ProductController::class, 'update']);

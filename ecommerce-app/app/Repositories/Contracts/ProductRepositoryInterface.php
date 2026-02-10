@@ -8,28 +8,27 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface ProductRepositoryInterface
 {
-    /**
-     * Get all products with optional filters.
-     */
-    public function all(array $filters = []): Collection|LengthAwarePaginator;
-
-    /**
-     * Find a product by ID.
-     */
-    public function find(int $id): ?Product;
-
-    /**
-     * Create a new product.
-     */
+    public function all(): Collection;
+    
+    public function paginate(int $perPage = 15, ?string $search = null, ?int $categoryId = null): LengthAwarePaginator;
+    
+    public function findById(int $id): ?Product;
+    
+    public function findByUuid(string $uuid): ?Product;
+    
+    public function findBySlug(string $slug): ?Product;
+    
+    public function findBySku(string $sku): ?Product;
+    
     public function create(array $data): Product;
-
-    /**
-     * Update a product.
-     */
-    public function update(Product $product, array $data): Product;
-
-    /**
-     * Delete a product.
-     */
-    public function delete(Product $product): bool;
+    
+    public function update(int $id, array $data): bool;
+    
+    public function delete(int $id): bool;
+    
+    public function getActive(): Collection;
+    
+    public function getFeatured(int $limit = 10): Collection;
+    
+    public function getLowStock(): Collection;
 }

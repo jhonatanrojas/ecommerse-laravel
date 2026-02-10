@@ -1,0 +1,256 @@
+@extends('layouts.admin')
+
+@section('content')
+<div class="mb-4">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Orden #{{ $order->order_number }}</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Creada el {{ $order->created_at->format('d/m/Y H:i') }}</p>
+        </div>
+        <a href="{{ route('admin.orders.index') }}" class="text-white bg-gray-700 hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-600 dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800">
+            Volver al Listado
+        </a>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    
+    <!-- Columna Principal -->
+    <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Items de la Orden -->
+        <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Productos</h2>
+            
+            <div class="relative overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Producto</th>
+                            <th scope="col" class="px-6 py-3">SKU</th>
+                            <th scope="col" class="px-6 py-3">Cantidad</th>
+                            <th scope="col" class="px-6 py-3">Precio</th>
+                            <th scope="col" class="px-6 py-3">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($order->items as $item)
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                                {{ $item->product_name }}
+                            </td>
+                            <td class="px-6 py-4">
+                                {{ $item->product_sku ?? 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4">
+                                {{ $item->quantity }}
+                            </td>
+                            <td class="px-6 py-4">
+                                ${{ number_format($item->price, 2) }}
+                            </td>
+                            <td class="px-6 py-4 font-semibold">
+                                ${{ number_format($item->total, 2) }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Totales -->
+            <div class="mt-6 space-y-2 border-t border-gray-200 dark:border-gray-700 pt-4">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                    <span class="font-medium text-gray-900 dark:text-white">${{ number_format($order->subtotal, 2) }}</span>
+                </div>
+                @if($order->discount > 0)
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">Descuento:</span>
+                    <span class="font-medium text-red-600 dark:text-red-500">-${{ number_format($order->discount, 2) }}</span>
+                </div>
+                @endif
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">Impuestos:</span>
+                    <span class="font-medium text-gray-900 dark:text-white">${{ number_format($order->tax, 2) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600 dark:text-gray-400">Envío:</span>
+                    <span class="font-medium text-gray-900 dark:text-white">${{ number_format($order->shipping_cost, 2) }}</span>
+                </div>
+                <div class="flex justify-between text-lg font-bold border-t border-gray-200 dark:border-gray-700 pt-2">
+                    <span class="text-gray-900 dark:text-white">Total:</span>
+                    <span class="text-gray-900 dark:text-white">${{ number_format($order->total, 2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Cliente -->
+        <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Información del Cliente</h2>
+            
+            <div class="space-y-3">
+                <div>
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Nombre:</span>
+                    <p class="text-sm text-gray-900 dark:text-white">{{ $order->user->name }}</p>
+                </div>
+                <div>
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Email:</span>
+                    <p class="text-sm text-gray-900 dark:text-white">{{ $order->user->email }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direcciones -->
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <!-- Dirección de Envío -->
+            <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Dirección de Envío</h2>
+                @if($order->shippingAddress)
+                <div class="text-sm text-gray-900 dark:text-white space-y-1">
+                    <p>{{ $order->shippingAddress->address_line1 }}</p>
+                    @if($order->shippingAddress->address_line2)
+                    <p>{{ $order->shippingAddress->address_line2 }}</p>
+                    @endif
+                    <p>{{ $order->shippingAddress->city }}, {{ $order->shippingAddress->state }}</p>
+                    <p>{{ $order->shippingAddress->postal_code }}</p>
+                    <p>{{ $order->shippingAddress->country }}</p>
+                </div>
+                @else
+                <p class="text-sm text-gray-500 dark:text-gray-400">No especificada</p>
+                @endif
+            </div>
+
+            <!-- Dirección de Facturación -->
+            <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Dirección de Facturación</h2>
+                @if($order->billingAddress)
+                <div class="text-sm text-gray-900 dark:text-white space-y-1">
+                    <p>{{ $order->billingAddress->address_line1 }}</p>
+                    @if($order->billingAddress->address_line2)
+                    <p>{{ $order->billingAddress->address_line2 }}</p>
+                    @endif
+                    <p>{{ $order->billingAddress->city }}, {{ $order->billingAddress->state }}</p>
+                    <p>{{ $order->billingAddress->postal_code }}</p>
+                    <p>{{ $order->billingAddress->country }}</p>
+                </div>
+                @else
+                <p class="text-sm text-gray-500 dark:text-gray-400">No especificada</p>
+                @endif
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Columna Lateral -->
+    <div class="space-y-6">
+        
+        <!-- Estado de la Orden -->
+        <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Estado de la Orden</h2>
+            
+            <form method="POST" action="{{ route('admin.orders.update', $order->uuid) }}">
+                @csrf
+                @method('PUT')
+                
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Estado Actual</label>
+                    @include('admin.orders.partials.status-badge', ['status' => $order->status])
+                </div>
+
+                @if(count($availableStatuses) > 0)
+                <div class="mb-4">
+                    <label for="status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cambiar a:</label>
+                    <select id="status" name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">Seleccionar...</option>
+                        @foreach($availableStatuses as $status)
+                            <option value="{{ $status->value }}">{{ ucfirst($status->value) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                    Actualizar Estado
+                </button>
+                @else
+                <p class="text-sm text-gray-500 dark:text-gray-400">No hay cambios de estado disponibles</p>
+                @endif
+            </form>
+        </div>
+
+        <!-- Estado de Pago -->
+        <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Estado de Pago</h2>
+            @include('admin.orders.partials.payment-badge', ['status' => $order->payment_status])
+            
+            @if($order->payment_method)
+            <div class="mt-4">
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Método de Pago:</span>
+                <p class="text-sm text-gray-900 dark:text-white">{{ $order->payment_method }}</p>
+            </div>
+            @endif
+        </div>
+
+        <!-- Información Adicional -->
+        <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Información Adicional</h2>
+            
+            <div class="space-y-3 text-sm">
+                @if($order->coupon_code)
+                <div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Cupón:</span>
+                    <p class="text-gray-900 dark:text-white">{{ $order->coupon_code }}</p>
+                </div>
+                @endif
+
+                @if($order->shipping_method)
+                <div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Método de Envío:</span>
+                    <p class="text-gray-900 dark:text-white">{{ $order->shipping_method }}</p>
+                </div>
+                @endif
+
+                @if($order->shipped_at)
+                <div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Enviado:</span>
+                    <p class="text-gray-900 dark:text-white">{{ $order->shipped_at->format('d/m/Y H:i') }}</p>
+                </div>
+                @endif
+
+                @if($order->delivered_at)
+                <div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Entregado:</span>
+                    <p class="text-gray-900 dark:text-white">{{ $order->delivered_at->format('d/m/Y H:i') }}</p>
+                </div>
+                @endif
+
+                @if($order->notes)
+                <div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Notas:</span>
+                    <p class="text-gray-900 dark:text-white">{{ $order->notes }}</p>
+                </div>
+                @endif
+
+                @if($order->customer_notes)
+                <div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Notas del Cliente:</span>
+                    <p class="text-gray-900 dark:text-white">{{ $order->customer_notes }}</p>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        @if(in_array(\App\Enums\OrderStatus::Cancelled->value, array_map(fn($s) => $s->value, $availableStatuses)))
+        <form method="POST" action="{{ route('admin.orders.destroy', $order->uuid) }}" onsubmit="return confirm('¿Estás seguro de que deseas cancelar esta orden?');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="w-full text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none dark:focus:ring-red-800">
+                Cancelar Orden
+            </button>
+        </form>
+        @endif
+
+    </div>
+
+</div>
+@endsection

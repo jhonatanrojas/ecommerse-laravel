@@ -4,12 +4,12 @@ namespace App\Models;
 
 use App\Models\Traits\HasAuditFields;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -43,7 +43,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Product extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, HasAuditFields;
+    use HasFactory, SoftDeletes, HasAuditFields;
 
     /**
      * The attributes that are mass assignable.
@@ -51,6 +51,7 @@ class Product extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'uuid',
         'category_id',
         'name',
         'slug',
@@ -84,17 +85,43 @@ class Product extends Model
         'compare_price' => 'decimal:2',
         'cost' => 'decimal:2',
         'weight' => 'decimal:2',
+        'stock' => 'integer',
+        'low_stock_threshold' => 'integer',
         'dimensions' => 'array', // Cast JSON to array
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
     ];
 
     /**
+     * Boot method to auto-generate UUID and slug
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($product) {
+            if (empty($product->uuid)) {
+                $product->uuid = (string) Str::uuid();
+            }
+            
+            if (empty($product->slug)) {
+                $product->slug = Str::slug($product->name);
+            }
+        });
+
+        static::updating(function ($product) {
+            if ($product->isDirty('name') && empty($product->slug)) {
+                $product->slug = Str::slug($product->name);
+            }
+        });
+    }
+
+    /**
      * Get the route key for the model.
      */
     public function getRouteKeyName(): string
     {
-        return 'uuid';
+        return 'id'; // Usar ID numérico para rutas
     }
 
     /**
@@ -151,5 +178,49 @@ class Product extends Model
     public function scopeInStock(Builder $query): Builder
     {
         return $query->where('stock', '>', 0);
+    }
+
+    /**
+     * Scope a query to search products
+     */
+    public function scopeSearch(Builder $query, string $search): Builder
+    {
+        return $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('sku', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+        });
+    }
+
+    /**
+     * Get formatted price
+     */
+    public function getFormattedPriceAttribute(): string
+    {
+        return '$' . number_format($this->price, 2);
+    }
+
+    /**
+     * Check if product has low stock
+     */
+    public function getIsLowStockAttribute(): bool
+    {
+        return $this->stock <= $this->low_stock_threshold && $this->stock > 0;
+    }
+
+    /**
+     * Check if product is out of stock
+     */
+    public function getIsOutOfStockAttribute(): bool
+    {
+        return $this->stock <= 0;
+    }
+
+    /**
+     * Get primary image
+     */
+    public function getPrimaryImageAttribute()
+    {
+        return $this->images()->where('is_primary', true)->first();
     }
 }

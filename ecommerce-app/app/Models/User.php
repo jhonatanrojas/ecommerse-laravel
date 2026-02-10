@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @property int $id
@@ -32,7 +33,7 @@ use Laravel\Sanctum\HasApiTokens;
  */
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasUuids, SoftDeletes, HasAuditFields;
+    use HasApiTokens, HasFactory, Notifiable, HasUuids, SoftDeletes, HasAuditFields, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -77,13 +78,7 @@ class User extends Authenticatable
         return 'uuid';
     }
 
-    /**
-     * Get the roles that belong to the user.
-     */
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id');
-    }
+    // Relación de roles ahora es manejada por Spatie\Permission\Traits\HasRoles
 
     /**
      * Get the addresses for the user.
