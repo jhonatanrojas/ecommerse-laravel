@@ -16,7 +16,7 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $listen = [
         Registered::class => [
-            SendEmailVerificationNotification::class,
+            SendEmailVerificationNotification::class ,
         ],
     ];
 
@@ -25,7 +25,8 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \App\Models\Menu::observe(\App\Observers\MenuObserver::class);
+        \App\Models\MenuItem::observe(\App\Observers\MenuItemObserver::class);
     }
 
     /**

@@ -24,68 +24,79 @@ class RepositoryServiceProvider extends ServiceProvider
     {
         // Category Bindings
         $this->app->bind(
-            CategoryRepositoryInterface::class,
+            CategoryRepositoryInterface::class ,
             EloquentCategoryRepository::class
         );
 
         $this->app->bind(
-            CategoryServiceInterface::class,
+            CategoryServiceInterface::class ,
             CategoryService::class
         );
 
         // Product Bindings
         $this->app->bind(
-            ProductRepositoryInterface::class,
+            ProductRepositoryInterface::class ,
             EloquentProductRepository::class
         );
 
         $this->app->bind(
-            ProductServiceInterface::class,
+            ProductServiceInterface::class ,
             ProductService::class
         );
 
         // Order Bindings
         $this->app->bind(
-            OrderRepositoryInterface::class,
+            OrderRepositoryInterface::class ,
             EloquentOrderRepository::class
         );
 
         $this->app->bind(
-            OrderServiceInterface::class,
+            OrderServiceInterface::class ,
             OrderService::class
         );
 
         $this->app->bind(
-            OrderStatusServiceInterface::class,
+            OrderStatusServiceInterface::class ,
             OrderStatusService::class
         );
 
         // Store Settings Bindings
         $this->app->bind(
-            \App\Repositories\Contracts\StoreSettingRepositoryInterface::class,
+            \App\Repositories\Contracts\StoreSettingRepositoryInterface::class ,
             \App\Repositories\Eloquent\EloquentStoreSettingRepository::class
         );
 
         $this->app->bind(
-            \App\Services\Contracts\StoreSettingServiceInterface::class,
+            \App\Services\Contracts\StoreSettingServiceInterface::class ,
             \App\Services\StoreSettingService::class
         );
 
         // File Service Binding
         $this->app->bind(
-            \App\Services\Contracts\FileServiceInterface::class,
+            \App\Services\Contracts\FileServiceInterface::class ,
             \App\Services\FileService::class
         );
 
         // Home Section Bindings
         $this->app->bind(
-            \App\Repositories\Contracts\HomeSectionRepositoryInterface::class,
+            \App\Repositories\Contracts\HomeSectionRepositoryInterface::class ,
             \App\Repositories\Eloquent\EloquentHomeSectionRepository::class
+        );
+
+        // Menu Bindings
+        $this->app->bind(
+            \App\Repositories\Contracts\MenuRepositoryInterface::class ,
+            \App\Repositories\Eloquent\MenuRepository::class
+        );
+
+        $this->app->bind(
+            \App\Repositories\Contracts\MenuItemRepositoryInterface::class ,
+            \App\Repositories\Eloquent\MenuItemRepository::class
         );
     }
 
     public function boot(): void
     {
-        //
+    //
     }
 }
