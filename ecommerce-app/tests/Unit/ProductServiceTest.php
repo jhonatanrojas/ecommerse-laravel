@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Product;
-use App\Repositories\ProductRepositoryInterface;
+use App\Repositories\Contracts\ProductRepositoryInterface;
 use App\Services\ProductService;
 use Mockery;
 use Tests\TestCase;

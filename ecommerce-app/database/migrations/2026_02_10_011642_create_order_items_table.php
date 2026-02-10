@@ -1,0 +1,46 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('order_items', function (Blueprint $table) {
+            // 1. Estrategia Híbrida: ID Incremental + UUID Público
+            $table->id(); // Primary key auto-incremental
+            $table->uuid('uuid')->unique()->index(); // Identificador público único
+
+            // Foreign Keys
+            $table->foreignId('order_id')->constrained()->onDelete('cascade');
+            $table->foreignId('product_id')->constrained()->onDelete('restrict'); // Mantener historial de productos
+            $table->foreignId('product_variant_id')->nullable()->constrained()->onDelete('restrict'); // Mantener historial de variantes
+
+            // Campos específicos de la tabla order_items (snapshot de los datos del producto en el momento del pedido)
+            $table->string('product_name');
+            $table->string('product_sku')->nullable();
+            $table->integer('quantity');
+            $table->decimal('price', 10, 2);
+            $table->decimal('subtotal', 10, 2);
+            $table->decimal('tax', 10, 2)->default(0.00);
+            $table->decimal('total', 10, 2);
+
+            // 2. Campos Auditables Obligatorios
+            $table->timestamps(); // created_at, updated_at
+            $table->softDeletes(); // deleted_at (recuperabilidad)
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('order_items');
+    }
+};

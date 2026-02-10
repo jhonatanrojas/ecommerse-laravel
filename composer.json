@@ -1,0 +1,11 @@
+{
+    "require": {
+        "ramsey/uuid": "^4.9",
+        "spatie/laravel-permission": "^6.24",
+        "intervention/image": "^3.11",
+        "laravel/scout": "^10.23"
+    },
+    "require-dev": {
+        "laravel/breeze": "^2.3"
+    }
+}
