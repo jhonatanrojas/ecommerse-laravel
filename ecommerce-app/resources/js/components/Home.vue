@@ -63,14 +63,7 @@
             </a>
 
             <!-- Cart -->
-            <a href="/cart" class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Carrito">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
-              </svg>
-              <span v-if="cartCount > 0" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-indigo-600 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                {{ cartCount }}
-              </span>
-            </a>
+            <CartButton />
 
             <!-- Mobile Menu Toggle -->
             <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Menú">
@@ -248,10 +241,23 @@
       </div>
     </footer>
 
+    <!-- Cart Drawer -->
+    <CartDrawer />
+
+    <!-- Toast Notifications -->
+    <CartToast
+      :show="toast.show"
+      :type="toast.type"
+      :title="toast.title"
+      :message="toast.message"
+      @close="toast.show = false"
+    />
+
   </div>
 </template>
 
 <script>
+import { onMounted } from 'vue';
 import HeroSection from './sections/HeroSection.vue';
 import FeaturedProductsSection from './sections/FeaturedProductsSection.vue';
 import FeaturedCategoriesSection from './sections/FeaturedCategoriesSection.vue';
@@ -262,6 +268,7 @@ import BenefitsSection from './sections/BenefitsSection.vue';
 import NewsletterSection from './sections/NewsletterSection.vue';
 import TrustBadges from './sections/TrustBadges.vue';
 import Navigation from '../Components/Navigation.vue';
+import { useCartStore } from '../stores/cart';
 
 export default {
   name: 'Home',
@@ -277,19 +284,36 @@ export default {
     TrustBadges,
     Navigation,
   },
+  setup() {
+    const cartStore = useCartStore();
+
+    onMounted(() => {
+      // Initialize cart on mount
+      cartStore.fetchCart();
+    });
+
+    return {
+      cartStore,
+    };
+  },
   data() {
     return {
       sections: [],
       loading: true,
       error: null,
       appName: 'Mi Tienda',
-      cartCount: 0,
       searchQuery: '',
       mobileMenuOpen: false,
       mobileSearchOpen: false,
       showPromoBar: true,
       scrolled: false,
       currentYear: new Date().getFullYear(),
+      toast: {
+        show: false,
+        type: 'info',
+        title: '',
+        message: '',
+      },
     };
   },
   mounted() {
@@ -333,6 +357,14 @@ export default {
     },
     handleScroll() {
       this.scrolled = window.scrollY > 20;
+    },
+    showToast(type, message, title = '') {
+      this.toast = {
+        show: true,
+        type,
+        title,
+        message,
+      };
     },
   },
 };

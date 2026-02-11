@@ -46,9 +46,11 @@
                   class="quick-action-btn"
                   title="Añadir al carrito"
                   @click.prevent="addToCart(product)"
+                  :disabled="addingToCart === product.id"
                   aria-label="Añadir al carrito"
                 >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div v-if="addingToCart === product.id" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
                   </svg>
                 </button>
@@ -127,6 +129,8 @@
 </template>
 
 <script>
+import { useCartStore } from '../../stores/cart';
+
 export default {
   name: 'FeaturedProductsSection',
   props: {
@@ -134,6 +138,15 @@ export default {
       type: Object,
       required: true,
     },
+  },
+  data() {
+    return {
+      addingToCart: null,
+    };
+  },
+  setup() {
+    const cartStore = useCartStore();
+    return { cartStore };
   },
   computed: {
     renderedData() {
@@ -165,9 +178,17 @@ export default {
       }
       return null;
     },
-    addToCart(product) {
-      // Emit event or handle cart logic
-      console.log('Add to cart:', product.name);
+    async addToCart(product) {
+      this.addingToCart = product.id;
+      
+      const result = await this.cartStore.addItem(product.id, null, 1);
+      
+      this.addingToCart = null;
+      
+      if (result.success) {
+        // Show success feedback
+        this.$emit('product-added', product);
+      }
     },
     handleImageError(event) {
       event.target.style.display = 'none';

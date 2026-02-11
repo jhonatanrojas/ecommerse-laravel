@@ -185,6 +185,29 @@
                 @enderror
             </div>
 
+            <!-- Permitir Checkout de Invitados -->
+            <div class="lg:col-span-2">
+                <div class="flex items-center">
+                    <input 
+                        id="allow_guest_checkout" 
+                        name="allow_guest_checkout" 
+                        type="checkbox" 
+                        value="1"
+                        {{ old('allow_guest_checkout', $settings->allow_guest_checkout ?? false) ? 'checked' : '' }}
+                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    >
+                    <label for="allow_guest_checkout" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                        Permitir Checkout de Invitados
+                    </label>
+                </div>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Cuando está activado, los usuarios pueden completar compras sin necesidad de crear una cuenta o iniciar sesión
+                </p>
+                @error('allow_guest_checkout')
+                    <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
+                @enderror
+            </div>
+
         </div>
 
         <!-- Botones de Acción -->

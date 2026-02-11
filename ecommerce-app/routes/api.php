@@ -26,6 +26,9 @@ Route::get('products/{product}', [ProductController::class , 'show']);
 // Home Configuration (Public API)
 Route::get('home-configuration', [\App\Http\Controllers\Api\HomeConfigurationController::class , 'index']);
 
+// Store Configuration (Public API)
+Route::get('store-config', [\App\Http\Controllers\Api\StoreConfigController::class, 'index']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('products', [ProductController::class , 'store']);
     Route::put('products/{product}', [ProductController::class , 'update']);
@@ -49,9 +52,8 @@ Route::prefix('cart')->group(function () {
     Route::post('/coupon', [CouponController::class, 'store'])->name('cart.coupon.store');
     Route::delete('/coupon', [CouponController::class, 'destroy'])->name('cart.coupon.destroy');
     
-    // Checkout (requires authentication)
+    // Checkout (conditional authentication based on store settings)
     Route::post('/checkout', [CheckoutController::class, 'store'])
-        ->middleware('auth:sanctum')
         ->name('cart.checkout');
 });
 

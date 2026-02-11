@@ -46,6 +46,8 @@ class CartController extends Controller
             ]);
         }
 
+        // Load cart with all relationships
+        $cart->load(['items.product.images', 'items.variant']);
         $summary = $this->cartService->getCartSummary($cart);
 
         return response()->json([
@@ -76,13 +78,15 @@ class CartController extends Controller
             $sessionId
         );
 
-        $summary = $this->cartService->getCartSummary($cart->fresh());
+        // Reload cart with all relationships
+        $cart = $cart->fresh(['items.product.images', 'items.variant']);
+        $summary = $this->cartService->getCartSummary($cart);
 
         return response()->json([
             'success' => true,
             'message' => 'Item added to cart successfully',
             'data' => [
-                'cart' => new CartResource($cart->fresh()),
+                'cart' => new CartResource($cart),
                 'summary' => new CartSummaryResource($summary),
             ],
         ], 201);
@@ -103,7 +107,8 @@ class CartController extends Controller
             $sessionId
         );
 
-        $cart = $updatedItem->cart->fresh();
+        // Reload cart with all relationships
+        $cart = $updatedItem->cart->fresh(['items.product.images', 'items.variant']);
         $summary = $this->cartService->getCartSummary($cart);
 
         return response()->json([
@@ -128,7 +133,8 @@ class CartController extends Controller
 
         $this->cartService->removeItem($cartItem, $user, $sessionId);
 
-        $cart = $cart->fresh();
+        // Reload cart with all relationships
+        $cart = $cart->fresh(['items.product.images', 'items.variant']);
         $summary = $this->cartService->getCartSummary($cart);
 
         return response()->json([

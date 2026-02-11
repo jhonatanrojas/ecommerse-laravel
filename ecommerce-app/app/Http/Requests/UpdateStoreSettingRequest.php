@@ -34,6 +34,7 @@ class UpdateStoreSettingRequest extends FormRequest
             'support_email' => ['nullable', 'email', 'max:255'],
             'transactional_email' => ['nullable', 'email', 'max:255'],
             'maintenance_mode' => ['nullable', 'boolean'],
+            'allow_guest_checkout' => ['nullable', 'boolean'],
         ];
     }
 
@@ -51,6 +52,7 @@ class UpdateStoreSettingRequest extends FormRequest
             'support_email' => 'email de soporte',
             'transactional_email' => 'email transaccional',
             'maintenance_mode' => 'modo de mantenimiento',
+            'allow_guest_checkout' => 'permitir checkout de invitados',
         ];
     }
 

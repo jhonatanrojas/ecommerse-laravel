@@ -18,6 +18,15 @@ Route::get('/', function () {
     return view('home');
 });
 
+// Checkout Routes
+Route::get('/checkout', function () {
+    return view('checkout');
+})->name('checkout');
+
+Route::get('/order-success/{orderId?}', function ($orderId = null) {
+    return view('checkout');
+})->name('order.success');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

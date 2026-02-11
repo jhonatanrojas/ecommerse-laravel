@@ -42,6 +42,7 @@ class Address extends Model
      */
     protected $fillable = [
         'user_id',
+        'customer_id',
         'type',
         'first_name',
         'last_name',
@@ -81,4 +82,13 @@ class Address extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Get the customer that owns the address.
+     */
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
 }

@@ -18,11 +18,13 @@ class StoreSetting extends Model
         'support_email',
         'transactional_email',
         'maintenance_mode',
+        'allow_guest_checkout',
     ];
 
     protected $casts = [
         'tax_rate' => 'decimal:2',
         'maintenance_mode' => 'boolean',
+        'allow_guest_checkout' => 'boolean',
     ];
 
     /**
