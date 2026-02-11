@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class ProductVariant extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

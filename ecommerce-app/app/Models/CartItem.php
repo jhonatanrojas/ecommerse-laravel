@@ -35,6 +35,7 @@ class CartItem extends Model
         'product_variant_id',
         'quantity',
         'price',
+        'uuid',
     ];
 
     /**
@@ -45,6 +46,16 @@ class CartItem extends Model
     protected $casts = [
         'price' => 'decimal:2',
     ];
+
+    /**
+     * Get the columns that should receive a unique identifier.
+     *
+     * @return array<int, string>
+     */
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
 
     /**
      * Get the route key for the model.

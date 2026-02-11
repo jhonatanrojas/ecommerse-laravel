@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
@@ -32,3 +35,23 @@ Route::middleware('auth:sanctum')->group(function () {
 // Menus Public API
 Route::get('/menus/location/{location}', [\App\Http\Controllers\Api\MenuController::class , 'getByLocation']);
 Route::get('/menus/key/{key}', [\App\Http\Controllers\Api\MenuController::class , 'getByKey']);
+
+// Cart API Routes
+Route::prefix('cart')->group(function () {
+    // Guest and authenticated users can access cart
+    Route::get('/', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/items', [CartController::class, 'store'])->name('cart.items.store');
+    Route::put('/items/{cartItem}', [CartController::class, 'update'])->name('cart.items.update');
+    Route::delete('/items/{cartItem}', [CartController::class, 'destroy'])->name('cart.items.destroy');
+    Route::delete('/', [CartController::class, 'clear'])->name('cart.clear');
+    
+    // Coupon management
+    Route::post('/coupon', [CouponController::class, 'store'])->name('cart.coupon.store');
+    Route::delete('/coupon', [CouponController::class, 'destroy'])->name('cart.coupon.destroy');
+    
+    // Checkout (requires authentication)
+    Route::post('/checkout', [CheckoutController::class, 'store'])
+        ->middleware('auth:sanctum')
+        ->name('cart.checkout');
+});
+

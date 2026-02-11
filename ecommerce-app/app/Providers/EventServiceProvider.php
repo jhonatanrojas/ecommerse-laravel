@@ -18,6 +18,25 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class ,
         ],
+        
+        // Cart Events
+        \App\Events\Cart\CartCheckedOut::class => [
+            \App\Listeners\Cart\SendOrderConfirmationEmail::class,
+            \App\Listeners\Cart\UpdateAnalytics::class . '@handleCheckout',
+        ],
+        
+        \App\Events\Cart\CartItemAdded::class => [
+            \App\Listeners\Cart\UpdateAnalytics::class . '@handleCartItemAdded',
+        ],
+        
+        \App\Events\Cart\CouponApplied::class => [
+            \App\Listeners\Cart\UpdateAnalytics::class . '@handleCouponApplied',
+        ],
+        
+        // Optional: Cart abandonment (commented out by default)
+        // \App\Events\Cart\CartCreated::class => [
+        //     \App\Listeners\Cart\SendCartAbandonmentEmail::class,
+        // ],
     ];
 
     /**

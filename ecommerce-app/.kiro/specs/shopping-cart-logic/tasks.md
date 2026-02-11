@@ -8,27 +8,27 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
 
 ## Tasks
 
-- [-] 1. Setup: Configuration and Infrastructure
+- [x] 1. Setup: Configuration and Infrastructure
   - [x] 1.1 Create cart configuration file
     - Create `config/cart.php` with guest_cart_expiration_days, max_item_quantity, tax_rate, default_shipping_cost
     - Add corresponding environment variables to `.env.example`
     - _Requirements: 12.1, 13.1, 4.3_
 
-  - [-] 1.2 Create custom exceptions hierarchy
+  - [x] 1.2 Create custom exceptions hierarchy
     - Create `app/Exceptions/Cart/CartException.php` and subclasses (CartExpiredException, CartNotFoundException, UnauthorizedCartAccessException)
     - Create `app/Exceptions/Cart/CartItemException.php` and subclasses (ProductNotFoundException, ProductInactiveException, InsufficientStockException, InvalidQuantityException)
     - Create `app/Exceptions/Cart/CouponException.php` and subclasses (CouponNotFoundException, CouponInactiveException, CouponExpiredException, CouponUsageLimitException, MinimumPurchaseNotMetException)
     - Create `app/Exceptions/Cart/CheckoutException.php` and subclass (CheckoutValidationException)
     - _Requirements: All error handling_
 
-  - [ ] 1.3 Create Data Transfer Objects (DTOs)
+  - [x] 1.3 Create Data Transfer Objects (DTOs)
     - Create `app/Services/Cart/DTOs/CartSummary.php` with readonly properties
     - Create `app/Services/Cart/DTOs/CheckoutData.php` with readonly properties
     - Create `app/Services/Cart/DTOs/ValidationResult.php` with success/fail static methods
     - _Requirements: 2.6, 7.1_
 
-- [ ] 2. Core Services: Validators
-  - [ ] 2.1 Implement StockValidator service
+- [x] 2. Core Services: Validators
+  - [x] 2.1 Implement StockValidator service
     - Create `app/Services/Cart/StockValidator.php`
     - Implement `validateProduct()` to check existence and is_active
     - Implement `validateVariant()` to check existence and parent product is_active
@@ -37,13 +37,13 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - Implement `isProductActive()` helper method
     - _Requirements: 3.1, 3.2, 3.3_
 
-  - [ ]* 2.2 Write property tests for StockValidator
+  - [x] 2.2 Write property tests for StockValidator
     - **Property 12: Active product validation**
     - **Property 13: Active variant validation**
     - **Property 14: Stock availability validation**
     - **Validates: Requirements 3.1, 3.2, 3.3**
 
-  - [ ] 2.3 Implement CouponValidator service
+  - [x] 2.3 Implement CouponValidator service
     - Create `app/Services/Cart/CouponValidator.php`
     - Implement `validate()` method that checks all coupon rules
     - Implement `isActive()` to check is_active field
@@ -57,9 +57,9 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 22: Comprehensive coupon validation**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5**
 
-- [ ] 3. Core Services: Calculator
+- [-] 3. Core Services: Calculator
 
-  - [ ] 3.1 Implement CartCalculator service
+  - [x] 3.1 Implement CartCalculator service
     - Create `app/Services/Cart/CartCalculator.php`
     - Implement `calculateSubtotal()` to sum (price × quantity) for all cart items
     - Implement `calculateDiscount()` for both fixed and percentage coupon types
@@ -69,7 +69,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - Implement `getTaxRate()` helper to get rate from config
     - _Requirements: 4.1, 4.2, 4.3, 4.5, 5.6, 5.7, 5.8_
 
-  - [ ]* 3.2 Write property tests for CartCalculator
+  - [ ] 3.2 Write property tests for CartCalculator
     - **Property 16: Subtotal calculation correctness**
     - **Property 17: Fixed coupon discount calculation**
     - **Property 18: Percentage coupon discount calculation**
@@ -77,8 +77,8 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 20: Total calculation correctness**
     - **Validates: Requirements 4.1, 4.2, 4.3, 4.5, 5.6, 5.7, 5.8**
 
-- [ ] 4. Core Services: CartRepository (Optional Pattern)
-  - [ ] 4.1 Implement CartRepository
+- [x] 4. Core Services: CartRepository (Optional Pattern)
+  - [x] 4.1 Implement CartRepository
     - Create `app/Services/Cart/CartRepository.php`
     - Implement `findByUser()` to find cart by user_id
     - Implement `findBySession()` to find cart by session_id
@@ -88,8 +88,8 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - Implement `deleteExpiredCarts()` to clean up expired carts
     - _Requirements: 1.1, 1.2, 12.4_
 
-- [ ] 5. Core Services: CartService - Cart Lifecycle
-  - [ ] 5.1 Implement cart lifecycle methods in CartService
+- [x] 5. Core Services: CartService - Cart Lifecycle
+  - [x] 5.1 Implement cart lifecycle methods in CartService
     - Create `app/Services/Cart/CartService.php` with constructor injection
     - Implement `getOrCreateCart()` to find or create cart for user/session
     - Implement `findCart()` to find existing cart
@@ -105,7 +105,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 37: Authenticated cart no expiration**
     - **Validates: Requirements 1.1, 1.2, 2.1, 12.1, 12.2**
 
-  - [ ] 5.3 Implement cart expiration validation
+  - [x] 5.3 Implement cart expiration validation
     - Add expiration check at the beginning of all cart operations
     - Throw CartExpiredException if cart is expired
     - _Requirements: 1.4_
@@ -115,7 +115,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Validates: Requirements 1.4**
 
 - [ ] 6. Core Services: CartService - Cart Items CRUD
-  - [ ] 6.1 Implement addItem method
+  - [x] 6.1 Implement addItem method
     - Implement `addItem()` with product_id, variant_id, quantity parameters
     - Validate product/variant using StockValidator
     - Validate stock availability
@@ -133,7 +133,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 39: Minimum quantity validation**
     - **Validates: Requirements 2.2, 3.4, 13.1, 13.2**
 
-  - [ ] 6.3 Implement updateItemQuantity method
+  - [x] 6.3 Implement updateItemQuantity method
     - Implement `updateItemQuantity()` with CartItem and new quantity
     - Validate new quantity against stock
     - Validate quantity limits
@@ -145,7 +145,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 8: Quantity update reflection**
     - **Validates: Requirements 2.3**
 
-  - [ ] 6.5 Implement removeItem and clearCart methods
+  - [x] 6.5 Implement removeItem and clearCart methods
     - Implement `removeItem()` to delete a CartItem
     - Implement `clearCart()` to delete all CartItems for a cart
     - _Requirements: 2.4, 2.5_
@@ -155,8 +155,8 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 10: Cart clearing completeness**
     - **Validates: Requirements 2.4, 2.5**
 
-- [ ] 7. Core Services: CartService - Cart Summary and Totals
-  - [ ] 7.1 Implement getCartSummary method
+- [x] 7. Core Services: CartService - Cart Summary and Totals
+  - [x] 7.1 Implement getCartSummary method
     - Implement `getCartSummary()` to return CartSummary DTO
     - Use CartCalculator to compute all totals
     - Eager load cart items with products and variants
@@ -168,13 +168,13 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 21: Totals recalculation on change**
     - **Validates: Requirements 2.6, 4.6**
 
-  - [ ] 7.3 Implement recalculateTotals method
+  - [x] 7.3 Implement recalculateTotals method
     - Implement `recalculateTotals()` to refresh all calculations
     - Call after any cart modification
     - _Requirements: 4.6_
 
-- [ ] 8. Core Services: CartService - Coupon Management
-  - [ ] 8.1 Implement applyCoupon method
+- [x] 8. Core Services: CartService - Coupon Management
+  - [x] 8.1 Implement applyCoupon method
     - Implement `applyCoupon()` with cart, coupon_code, and user parameters
     - Find coupon by code or throw CouponNotFoundException
     - Validate coupon using CouponValidator
@@ -187,7 +187,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 23: Coupon persistence after application**
     - **Validates: Requirements 5.1-5.9**
 
-  - [ ] 8.3 Implement removeCoupon method
+  - [x] 8.3 Implement removeCoupon method
     - Implement `removeCoupon()` to clear coupon_code and discount_amount
     - Recalculate totals after removal
     - _Requirements: 5.10_
@@ -196,8 +196,8 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 24: Coupon removal completeness**
     - **Validates: Requirements 5.10**
 
-- [ ] 9. Core Services: CartService - Cart Migration
-  - [ ] 9.1 Implement migrateGuestCartToUser method
+- [x] 9. Core Services: CartService - Cart Migration
+  - [x] 9.1 Implement migrateGuestCartToUser method
     - Implement `migrateGuestCartToUser()` with session_id and user parameters
     - Find guest cart by session_id
     - Find or create user cart
@@ -222,7 +222,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - Implement `processCheckout()` as main orchestration method
     - _Requirements: 7.1_
 
-  - [ ] 11.2 Implement order creation in checkout
+  - [x] 11.2 Implement order creation in checkout
     - Implement `createOrder()` private method
     - Generate unique order_number
     - Create Order with user_id, status, payment_status, and all totals from cart
@@ -234,7 +234,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 27: Order creation completeness**
     - **Validates: Requirements 7.1**
 
-  - [ ] 11.4 Implement order items creation in checkout
+  - [x] 11.4 Implement order items creation in checkout
     - Implement `createOrderItems()` private method
     - For each CartItem, create OrderItem with snapshot of product data
     - Copy product_id, product_variant_id, product_name, product_sku, quantity, price
@@ -246,18 +246,18 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 33: Order item price immutability**
     - **Validates: Requirements 7.2, 14.2**
 
-  - [ ] 11.6 Implement stock decrement in checkout
+  - [x] 11.6 Implement stock decrement in checkout
     - Implement `decrementStock()` private method
     - For each CartItem, decrement stock of Product or ProductVariant
     - Use lockForUpdate to prevent race conditions
     - Validate stock is still sufficient before decrement
     - _Requirements: 7.3_
 
-  - [ ]* 11.7 Write property test for stock decrement
+  - [x] 11.7 Write property test for stock decrement
     - **Property 29: Stock decrement on checkout**
     - **Validates: Requirements 7.3**
 
-  - [ ] 11.8 Implement coupon usage increment in checkout
+  - [x] 11.8 Implement coupon usage increment in checkout
     - Implement `incrementCouponUsage()` private method
     - If cart has coupon, increment Coupon.used_count
     - Create entry in coupon_user pivot table for user tracking
@@ -267,7 +267,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 30: Coupon usage increment on checkout**
     - **Validates: Requirements 7.4**
 
-  - [ ] 11.10 Implement cart clearing in checkout
+  - [x] 11.10 Implement cart clearing in checkout
     - Implement `clearCart()` private method to delete all CartItems
     - _Requirements: 7.5_
 
@@ -275,7 +275,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 31: Cart clearing after checkout**
     - **Validates: Requirements 7.5**
 
-  - [ ] 11.12 Wrap entire checkout in database transaction
+  - [x] 11.12 Wrap entire checkout in database transaction
     - Wrap all checkout steps in DB::transaction()
     - If any step fails, rollback entire transaction
     - Throw CheckoutException with descriptive message on failure
@@ -285,8 +285,8 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 32: Checkout atomicity**
     - **Validates: Requirements 7.6**
 
-- [ ] 12. Checkout: Integrate CheckoutService into CartService
-  - [ ] 12.1 Add checkout method to CartService
+- [x] 12. Checkout: Integrate CheckoutService into CartService
+  - [x] 12.1 Add checkout method to CartService
     - Implement `checkout()` method in CartService
     - Delegate to CheckoutService.processCheckout()
     - Validate cart is not empty before checkout
@@ -294,14 +294,14 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - _Requirements: 7.1_
 
 - [ ] 13. Authorization: Cart Ownership Validation
-  - [ ] 13.1 Implement authorizeCartAccess method
+  - [x] 13.1 Implement authorizeCartAccess method
     - Implement `authorizeCartAccess()` in CartService
     - For authenticated users, verify cart.user_id matches current user
     - For guests, verify cart.session_id matches current session
     - Throw UnauthorizedCartAccessException if mismatch
     - _Requirements: 9.1, 9.2_
 
-  - [ ] 13.2 Add authorization checks to all cart operations
+  - [x] 13.2 Add authorization checks to all cart operations
     - Call authorizeCartAccess() at the beginning of addItem, updateItemQuantity, removeItem, clearCart, applyCoupon, removeCoupon, checkout
     - _Requirements: 9.1, 9.2_
 
@@ -309,11 +309,11 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - **Property 35: Cart ownership validation**
     - **Validates: Requirements 9.1, 9.2**
 
-- [ ] 14. Checkpoint - Checkout and Authorization Complete
+- [x] 14. Checkpoint - Checkout and Authorization Complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. Events: Create Event Classes
-  - [ ] 15.1 Create cart lifecycle events
+- [x] 15. Events: Create Event Classes
+  - [x] 15.1 Create cart lifecycle events
     - Create `app/Events/Cart/CartCreated.php` with Cart property
     - Create `app/Events/Cart/CartItemAdded.php` with Cart and CartItem properties
     - Create `app/Events/Cart/CartItemUpdated.php` with Cart, CartItem, and oldQuantity properties
@@ -322,18 +322,18 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - Create `app/Events/Cart/CartMigrated.php` with guestCart, userCart, and User properties
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-  - [ ] 15.2 Create coupon events
+  - [x] 15.2 Create coupon events
     - Create `app/Events/Cart/CouponApplied.php` with Cart, Coupon, and discount properties
     - Create `app/Events/Cart/CouponRemoved.php` with Cart and couponCode properties
     - _Requirements: 8.6, 8.7_
 
-  - [ ] 15.3 Create checkout events
+  - [x] 15.3 Create checkout events
     - Create `app/Events/Cart/CartCheckedOut.php` with Cart and Order properties
     - Create `app/Events/Cart/CheckoutFailed.php` with Cart and reason properties
     - _Requirements: 8.8_
 
-- [ ] 16. Events: Emit Events from CartService
-  - [ ] 16.1 Emit events in cart lifecycle methods
+- [x] 16. Events: Emit Events from CartService
+  - [x] 16.1 Emit events in cart lifecycle methods
     - Emit CartCreated in getOrCreateCart() when creating new cart
     - Emit CartItemAdded in addItem() after successful addition
     - Emit CartItemUpdated in updateItemQuantity() after successful update
@@ -342,22 +342,22 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - Emit CartMigrated in migrateGuestCartToUser() after migration
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-  - [ ] 16.2 Emit events in coupon methods
+  - [x] 16.2 Emit events in coupon methods
     - Emit CouponApplied in applyCoupon() after successful application
     - Emit CouponRemoved in removeCoupon() after removal
     - _Requirements: 8.6, 8.7_
 
-  - [ ] 16.3 Emit events in checkout
+  - [x] 16.3 Emit events in checkout
     - Emit CartCheckedOut in checkout() after successful checkout
     - Emit CheckoutFailed in checkout() catch block on failure
     - _Requirements: 8.8_
 
-  - [ ]* 16.4 Write property test for event emission
+  - [x]* 16.4 Write property test for event emission
     - **Property 34: Cart lifecycle events emission**
     - **Validates: Requirements 8.1-8.8**
 
-- [ ] 17. Events: Create Event Listeners (Optional Side Effects)
-  - [ ] 17.1 Create example listeners
+- [x] 17. Events: Create Event Listeners (Optional Side Effects)
+  - [x] 17.1 Create example listeners
     - Create `app/Listeners/Cart/SendCartAbandonmentEmail.php` (optional)
     - Create `app/Listeners/Cart/UpdateAnalytics.php` (optional)
     - Create `app/Listeners/Cart/SendOrderConfirmationEmail.php` for CartCheckedOut
@@ -377,8 +377,8 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - Call CartService.migrateGuestCartToUser()
     - _Requirements: 1.3_
 
-- [ ] 19. API: Controllers and Routes
-  - [ ] 19.1 Create CartController
+- [x] 19. API: Controllers and Routes
+  - [x] 19.1 Create CartController
     - Create `app/Http/Controllers/Api/CartController.php`
     - Inject CartService in constructor
     - Implement index() to get cart summary
@@ -389,39 +389,40 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - Use API Resources for responses
     - _Requirements: 2.2, 2.3, 2.4, 2.5, 2.6_
 
-  - [ ] 19.2 Create CouponController
+  - [x] 19.2 Create CouponController
     - Create `app/Http/Controllers/Api/CouponController.php`
     - Inject CartService in constructor
     - Implement store() to apply coupon
     - Implement destroy() to remove coupon
     - _Requirements: 5.9, 5.10_
 
-  - [ ] 19.3 Create CheckoutController
+  - [x] 19.3 Create CheckoutController
     - Create `app/Http/Controllers/Api/CheckoutController.php`
     - Inject CartService in constructor
     - Implement store() to process checkout (validate with Form Request)
     - Return Order resource on success
     - _Requirements: 7.1_
 
-  - [ ] 19.4 Create Form Requests for validation
+  - [x] 19.4 Create Form Requests for validation
     - Create `app/Http/Requests/Cart/AddItemRequest.php` to validate product_id, variant_id, quantity
     - Create `app/Http/Requests/Cart/UpdateItemRequest.php` to validate quantity
     - Create `app/Http/Requests/Cart/ApplyCouponRequest.php` to validate coupon_code
     - Create `app/Http/Requests/Cart/CheckoutRequest.php` to validate checkout data
     - _Requirements: All validation_
 
-  - [ ] 19.5 Create API Resources for responses
+  - [x] 19.5 Create API Resources for responses
     - Create `app/Http/Resources/CartResource.php` to format cart with items
     - Create `app/Http/Resources/CartItemResource.php` to format cart item
     - Create `app/Http/Resources/CartSummaryResource.php` to format summary
     - _Requirements: 2.6_
 
-  - [ ] 19.6 Register API routes
+  - [x] 19.6 Register API routes
     - Add routes in `routes/api.php` for cart operations
     - Apply auth:sanctum middleware for authenticated routes
     - Apply guest middleware for guest cart routes
     - Group routes under /api/cart prefix
     - _Requirements: All_
+
 
 - [ ] 20. Service Provider Registration
   - [ ] 20.1 Register services in AppServiceProvider
@@ -429,7 +430,7 @@ El enfoque es incremental: implementar funcionalidad core primero, validar con t
     - _Requirements: All_
 
 - [ ] 21. Integration Tests
-  - [ ]* 21.1 Write integration test for complete cart flow
+  - [ ] 21.1 Write integration test for complete cart flow
     - Test: Create cart → Add items → Apply coupon → Checkout → Verify order
     - Test: Guest cart → Login → Verify migration → Checkout
     - Test: Concurrent additions → Verify no overselling

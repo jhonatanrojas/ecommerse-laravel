@@ -36,6 +36,7 @@ class Cart extends Model
         'coupon_code',
         'discount_amount',
         'expires_at',
+        'uuid',
     ];
 
     /**
@@ -47,6 +48,16 @@ class Cart extends Model
         'expires_at' => 'datetime',
         'discount_amount' => 'decimal:2',
     ];
+
+    /**
+     * Get the columns that should receive a unique identifier.
+     *
+     * @return array<int, string>
+     */
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
 
     /**
      * Get the route key for the model.

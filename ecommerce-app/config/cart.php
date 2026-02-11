@@ -53,4 +53,32 @@ return [
 
     'default_shipping_cost' => env('CART_DEFAULT_SHIPPING_COST', 10.00),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Notifications
+    |--------------------------------------------------------------------------
+    |
+    | These settings control whether email notifications are sent for various
+    | cart events. By default, all email notifications are disabled and must
+    | be explicitly enabled by the administrator.
+    |
+    */
+
+    'emails' => [
+        /*
+        | Send order confirmation email after successful checkout
+        */
+        'order_confirmation_enabled' => env('CART_EMAIL_ORDER_CONFIRMATION_ENABLED', false),
+
+        /*
+        | Send cart abandonment reminder email after specified delay
+        */
+        'cart_abandonment_enabled' => env('CART_EMAIL_CART_ABANDONMENT_ENABLED', false),
+
+        /*
+        | Delay in hours before sending cart abandonment email
+        */
+        'cart_abandonment_delay_hours' => env('CART_EMAIL_ABANDONMENT_DELAY_HOURS', 24),
+    ],
+
 ];
