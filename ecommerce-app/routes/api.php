@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CategoryController as PublicCategoryController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\ProductController as PublicProductController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController as ManageProductController;
@@ -13,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('register', [AuthController::class , 'register']);
 Route::post('login', [AuthController::class , 'login']);
+Route::post('payments/webhook', [PaymentWebhookController::class, 'handle']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class , 'logout']);
@@ -24,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('customer')->group(function () {
         // Customer Orders
         Route::get('/orders', [\App\Http\Controllers\Api\CustomerOrderController::class, 'index']);
+        Route::get('/orders/{uuid}', [\App\Http\Controllers\Api\CustomerOrderController::class, 'show']);
 
         // Customer Addresses
         Route::get('/addresses', [\App\Http\Controllers\Api\CustomerAddressController::class, 'index']);
@@ -37,6 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('products', [PublicProductController::class, 'index']);
 Route::get('products/{slug}/related', [PublicProductController::class, 'related']);
 Route::get('products/{slug}', [PublicProductController::class, 'show']);
+Route::get('categories', [PublicCategoryController::class, 'index']);
+Route::get('categories/{slug}/products', [PublicCategoryController::class, 'products']);
 
 // Home Configuration (Public API)
 Route::get('home-configuration', [\App\Http\Controllers\Api\HomeConfigurationController::class , 'index']);
@@ -48,6 +55,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('products', [ManageProductController::class , 'store']);
     Route::put('products/{product}', [ManageProductController::class , 'update']);
     Route::delete('products/{product}', [ManageProductController::class , 'destroy']);
+
+    Route::post('payments', [PaymentController::class, 'store']);
+    Route::get('payments/{uuid}', [PaymentController::class, 'show']);
+    Route::post('payments/{uuid}/refund', [PaymentController::class, 'refund']);
 });
 
 // Menus Public API

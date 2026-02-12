@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\PaymentStatus;
+use App\Enums\PaymentRecordStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $transaction_id
  * @property float $amount
  * @property string $currency
- * @property PaymentStatus $status
+ * @property PaymentRecordStatus $status
  * @property array|null $gateway_response
  * @property \Illuminate\Support\Carbon|null $payment_date
  * @property \Illuminate\Support\Carbon|null $refund_date
@@ -58,11 +58,21 @@ class Payment extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'refund_amount' => 'decimal:2',
-        'status' => PaymentStatus::class,
+        'status' => PaymentRecordStatus::class,
         'gateway_response' => 'array', // Cast JSON to array
         'payment_date' => 'datetime',
         'refund_date' => 'datetime',
     ];
+
+    /**
+     * Get the columns that should receive a unique identifier.
+     *
+     * @return array<int, string>
+     */
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
 
     /**
      * Get the route key for the model.
