@@ -49,6 +49,10 @@
       </div>
     </div>
 
+    <p v-if="priceError" class="mt-2 text-xs font-medium text-rose-600">
+      {{ priceError }}
+    </p>
+
     <div class="mt-3 flex flex-col gap-3 border-t border-gray-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="w-full sm:w-64">
         <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Ordenar</label>
@@ -86,7 +90,7 @@
 </template>
 
 <script setup>
-import { reactive, watch } from 'vue';
+import { computed, reactive, watch } from 'vue';
 
 const props = defineProps({
   filters: {
@@ -106,6 +110,7 @@ const props = defineProps({
 const emit = defineEmits(['change', 'reset']);
 
 const localFilters = reactive({ ...props.filters });
+let searchDebounceTimeout = null;
 
 watch(
   () => props.filters,
@@ -115,7 +120,38 @@ watch(
   { deep: true }
 );
 
+watch(
+  () => localFilters.search,
+  () => {
+    if (searchDebounceTimeout) {
+      clearTimeout(searchDebounceTimeout);
+    }
+
+    searchDebounceTimeout = setTimeout(() => {
+      applyFilters();
+    }, 350);
+  }
+);
+
+const priceError = computed(() => {
+  const min = Number(localFilters.min_price);
+  const max = Number(localFilters.max_price);
+
+  if (localFilters.min_price === '' || localFilters.max_price === '') {
+    return '';
+  }
+
+  if (!Number.isNaN(min) && !Number.isNaN(max) && min > max) {
+    return 'El precio mínimo no puede ser mayor al precio máximo.';
+  }
+
+  return '';
+});
+
 function applyFilters() {
+  if (priceError.value) {
+    return;
+  }
   emit('change', { ...localFilters, page: 1 });
 }
 </script>

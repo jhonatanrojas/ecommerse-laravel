@@ -20,6 +20,11 @@ class AuthService
             'password' => Hash::make($data['password']),
         ]);
 
+        // Crear perfil de cliente automáticamente
+        $user->customer()->create([
+            'phone' => $data['phone'] ?? null,
+        ]);
+
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return [

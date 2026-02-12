@@ -21,6 +21,12 @@
         >
           Agotado
         </span>
+        <span
+          v-else-if="isLowStock"
+          class="absolute left-3 top-3 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-white"
+        >
+          Últimas unidades
+        </span>
       </div>
     </a>
 
@@ -49,6 +55,7 @@
         @click.prevent="$emit('add-to-cart', product)"
       >
         <span v-if="adding" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+        <span v-else-if="justAdded">Añadido</span>
         <span v-else>Añadir al carrito</span>
       </button>
     </div>
@@ -67,6 +74,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  justAdded: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 defineEmits(['add-to-cart']);
@@ -77,6 +88,7 @@ const primaryImage = computed(() => {
 });
 
 const isOutOfStock = computed(() => Number(props.product.stock) <= 0);
+const isLowStock = computed(() => Number(props.product.stock) > 0 && Number(props.product.stock) <= 5);
 
 function formatPrice(value) {
   const amount = Number(value || 0);

@@ -18,10 +18,12 @@ export const useCustomerStore = defineStore('customer', {
     user: null,
     addresses: [],
     orders: [],
+    currentOrder: null,
     loading: {
       user: false,
       addresses: false,
       orders: false,
+      orderDetail: false,
       password: false,
       addressMutation: false,
       defaultAddress: false,
@@ -87,11 +89,11 @@ export const useCustomerStore = defineStore('customer', {
       }
     },
 
-    async fetchOrders() {
+    async fetchOrders(params = {}) {
       this.loading.orders = true;
       this.clearErrors();
       try {
-        const { data } = await api.get('/customer/orders');
+        const { data } = await api.get('/customer/orders', { params });
         this.orders = data?.data ?? data ?? [];
         return { success: true, orders: this.orders };
       } catch (error) {
@@ -100,6 +102,24 @@ export const useCustomerStore = defineStore('customer', {
         return { success: false, ...normalized };
       } finally {
         this.loading.orders = false;
+      }
+    },
+
+    async fetchOrder(orderId) {
+      this.loading.orderDetail = true;
+      this.clearErrors();
+      this.currentOrder = null;
+
+      try {
+        const { data } = await api.get(`/customer/orders/${orderId}`);
+        this.currentOrder = data?.data ?? data ?? null;
+        return { success: true, order: this.currentOrder };
+      } catch (error) {
+        const normalized = this.setError(error);
+        this.currentOrder = null;
+        return { success: false, ...normalized };
+      } finally {
+        this.loading.orderDetail = false;
       }
     },
 

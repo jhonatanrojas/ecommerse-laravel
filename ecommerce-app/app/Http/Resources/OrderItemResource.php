@@ -23,6 +23,17 @@ class OrderItemResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $primaryImage = null;
+
+        if ($this->relationLoaded('product') && $this->product) {
+            $images = $this->product->relationLoaded('images')
+                ? $this->product->images
+                : collect();
+
+            $primaryImage = optional($images->firstWhere('is_primary', true))->url
+                ?? optional($images->first())->url;
+        }
+
         return [
             'id' => $this->id,
             'uuid' => $this->uuid,
@@ -35,6 +46,14 @@ class OrderItemResource extends JsonResource
             'subtotal' => $this->subtotal,
             'tax' => $this->tax,
             'total' => $this->total,
+            'product' => $this->whenLoaded('product', function () use ($primaryImage) {
+                return [
+                    'id' => $this->product?->id,
+                    'name' => $this->product?->name ?? $this->product_name,
+                    'slug' => $this->product?->slug,
+                    'image_url' => $primaryImage,
+                ];
+            }),
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
         ];

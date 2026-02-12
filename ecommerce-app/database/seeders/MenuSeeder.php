@@ -52,10 +52,10 @@ class MenuSeeder extends Seeder
             'order' => 1,
         ]);
 
-        // Productos
+        // Tienda
         $products = MenuItem::create([
             'menu_id' => $menu->id,
-            'label' => 'Productos',
+            'label' => 'Tienda',
             'url' => '/products',
             'type' => 'internal',
             'order' => 2,
@@ -63,9 +63,9 @@ class MenuSeeder extends Seeder
 
         // Subitems Productos
         $subItems = [
-            ['label' => 'Electrónicos', 'url' => '/category/electronics', 'order' => 1],
-            ['label' => 'Ropa', 'url' => '/category/clothing', 'order' => 2],
-            ['label' => 'Hogar', 'url' => '/category/home', 'order' => 3],
+            ['label' => 'Electrónicos', 'url' => '/categories/electronica', 'order' => 1],
+            ['label' => 'Ropa y Moda', 'url' => '/categories/ropa-y-moda', 'order' => 2],
+            ['label' => 'Hogar y Jardín', 'url' => '/categories/hogar-y-jardin', 'order' => 3],
         ];
 
         foreach ($subItems as $item) {
@@ -190,6 +190,7 @@ class MenuSeeder extends Seeder
     {
         $items = [
             ['label' => 'Inicio', 'url' => '/', 'icon' => 'heroicon-home'],
+            ['label' => 'Tienda', 'url' => '/products', 'icon' => 'heroicon-shopping-bag'],
             ['label' => 'Categorías', 'url' => '/categories', 'icon' => 'heroicon-squares-2x2'],
             ['label' => 'Carrito', 'url' => '/cart', 'icon' => 'heroicon-shopping-cart'],
             ['label' => 'Perfil', 'url' => '/profile', 'icon' => 'heroicon-user'],

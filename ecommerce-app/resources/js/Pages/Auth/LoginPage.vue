@@ -1,102 +1,97 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
-      <h2 class="text-center text-3xl font-extrabold text-gray-900">
-        Iniciar sesión
-      </h2>
-      <p class="mt-2 text-center text-sm text-gray-600">
-        Accede a tu cuenta
-      </p>
-    </div>
+  <div class="min-h-screen bg-gradient-to-br from-white via-gray-50 to-indigo-50/50 px-4 py-8 sm:px-6 lg:py-12">
+    <div class="mx-auto grid w-full max-w-6xl overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl lg:grid-cols-2">
+      <aside class="relative hidden bg-gradient-to-br from-indigo-600 to-indigo-700 p-10 text-white lg:flex lg:flex-col lg:justify-between">
+        <div>
+          <a href="/" class="text-2xl font-extrabold tracking-tight">{{ appName }}</a>
+          <p class="mt-6 text-sm uppercase tracking-[0.2em] text-indigo-100">Bienvenido de vuelta</p>
+          <h1 class="mt-3 text-4xl font-extrabold leading-tight">Tu cuenta, tu carrito y tus pedidos en un solo lugar.</h1>
+          <p class="mt-4 max-w-md text-indigo-100">
+            Inicia sesión para continuar tu compra con una experiencia rápida y segura.
+          </p>
+        </div>
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-      <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-        <FormError
-          v-if="authStore.generalError"
-          :message="authStore.generalError"
-          :dismissible="true"
-          @dismiss="authStore.clearErrors()"
-          class="mb-6"
-        />
+        <div class="rounded-2xl border border-white/20 bg-white/10 p-4 text-sm text-indigo-50">
+          Checkout optimizado, historial de pedidos y seguimiento en tiempo real.
+        </div>
+      </aside>
 
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-          <InputText
-            v-model="form.email"
-            name="email"
-            type="email"
-            label="Correo electrónico"
-            placeholder="tu@email.com"
-            :required="true"
-            :error="authStore.getFieldError('email')"
-            autocomplete="email"
+      <main class="p-6 sm:p-10 lg:p-12">
+        <div class="mx-auto w-full max-w-md">
+          <a href="/" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 lg:hidden">
+            <span aria-hidden="true">←</span> Volver al inicio
+          </a>
+
+          <p class="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600">Acceso</p>
+          <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-gray-900">Iniciar sesión</h2>
+          <p class="mt-2 text-sm text-gray-500">Accede a tu cuenta para continuar.</p>
+
+          <FormError
+            v-if="authStore.generalError"
+            :message="authStore.generalError"
+            :dismissible="true"
+            @dismiss="authStore.clearErrors()"
+            class="mt-6"
           />
 
-          <InputPassword
-            v-model="form.password"
-            name="password"
-            label="Contraseña"
-            placeholder="Tu contraseña"
-            :required="true"
-            :error="authStore.getFieldError('password')"
-            autocomplete="current-password"
-          />
+          <form @submit.prevent="handleSubmit" class="mt-6 space-y-5">
+            <InputText
+              v-model="form.email"
+              name="email"
+              type="email"
+              label="Correo electrónico"
+              placeholder="tu@email.com"
+              :required="true"
+              :error="authStore.getFieldError('email')"
+              autocomplete="email"
+            />
 
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <input
-                id="remember"
-                v-model="form.remember"
-                type="checkbox"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label for="remember" class="ml-2 block text-sm text-gray-900">
+            <InputPassword
+              v-model="form.password"
+              name="password"
+              label="Contraseña"
+              placeholder="Tu contraseña"
+              :required="true"
+              :error="authStore.getFieldError('password')"
+              autocomplete="current-password"
+            />
+
+            <div class="flex items-center justify-between gap-4">
+              <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  id="remember"
+                  v-model="form.remember"
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
                 Recordarme
               </label>
-            </div>
 
-            <div class="text-sm">
-              <a href="/forgot-password" class="font-medium text-blue-600 hover:text-blue-500">
+              <a href="/forgot-password" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
-          </div>
 
-          <SubmitButton
-            text="Iniciar sesión"
-            loading-text="Iniciando sesión..."
-            :loading="authStore.loading"
-            :disabled="!isFormValid"
-          />
-        </form>
+            <SubmitButton
+              text="Iniciar sesión"
+              loading-text="Iniciando sesión..."
+              :loading="authStore.loading"
+              :disabled="!isFormValid"
+            />
+          </form>
 
-        <div class="mt-6">
-          <div class="relative">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-              <span class="px-2 bg-white text-gray-500">
-                ¿No tienes cuenta?
-              </span>
-            </div>
-          </div>
-
-          <div class="mt-6">
-            <a
-              href="/register"
-              class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
-            >
-              Crear cuenta
-            </a>
+          <div class="mt-8 border-t border-gray-100 pt-6 text-sm text-gray-600">
+            ¿No tienes cuenta?
+            <a href="/register" class="font-semibold text-indigo-600 hover:text-indigo-700">Crear cuenta</a>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useAuthStore } from '../../stores/auth';
 import { useCartStore } from '../../stores/cart';
 import InputText from '../../components/forms/InputText.vue';
@@ -107,6 +102,8 @@ import SubmitButton from '../../components/forms/SubmitButton.vue';
 const authStore = useAuthStore();
 const cartStore = useCartStore();
 
+const appName = window.AppConfig?.name || 'Tienda';
+
 const form = ref({
   email: '',
   password: '',
@@ -114,10 +111,7 @@ const form = ref({
 });
 
 const isFormValid = computed(() => {
-  return (
-    form.value.email.trim() !== '' &&
-    form.value.password.length >= 6
-  );
+  return form.value.email.trim() !== '' && form.value.password.length >= 6;
 });
 
 const handleSubmit = async () => {
@@ -132,10 +126,8 @@ const handleSubmit = async () => {
   });
 
   if (result.success) {
-    // Sincronizar carrito
     await cartStore.fetchCart();
-    
-    // Redirigir
+
     const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/';
     window.location.href = redirectTo;
   }

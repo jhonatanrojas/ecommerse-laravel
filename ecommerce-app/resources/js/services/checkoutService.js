@@ -92,6 +92,15 @@ export const checkoutService = {
     const response = await api.delete('/cart/coupon');
     return response.data;
   },
+
+  /**
+   * Get user addresses
+   * @returns {Promise} User addresses
+   */
+  async getUserAddresses() {
+    const response = await api.get('/customer/addresses');
+    return response.data;
+  },
 };
 
 export default checkoutService;

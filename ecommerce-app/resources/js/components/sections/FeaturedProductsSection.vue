@@ -2,9 +2,21 @@
   <section class="section-padding" :class="renderedData.background === 'white' ? 'bg-white' : 'bg-gray-50'">
     <div class="container mx-auto px-4">
       <!-- Section Header -->
-      <div class="section-header">
-        <h2 class="section-title">{{ section.title }}</h2>
-        <p v-if="section.subtitle" class="section-subtitle">{{ section.subtitle }}</p>
+      <div class="section-header flex flex-col gap-4 text-left sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 class="section-title">{{ section.title }}</h2>
+          <p v-if="sectionSubtitle" class="section-subtitle">{{ sectionSubtitle }}</p>
+        </div>
+        <a
+          v-if="viewAllEnabled"
+          :href="viewAllUrl"
+          class="group inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-indigo-400 bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-indigo-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2 sm:w-auto"
+        >
+          <span>{{ viewAllLabel }}</span>
+          <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h9.586l-2.293-2.293a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L13.586 11H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+          </svg>
+        </a>
       </div>
 
       <!-- Products Grid -->
@@ -155,6 +167,9 @@ export default {
     products() {
       return this.renderedData.products || [];
     },
+    sectionSubtitle() {
+      return this.section.subtitle || this.section.configuration?.subheading || null;
+    },
     gridClass() {
       const columns = this.renderedData.columns || 4;
       const columnClasses = {
@@ -165,6 +180,22 @@ export default {
         6: 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
       };
       return columnClasses[columns] || columnClasses[4];
+    },
+    viewAllEnabled() {
+      return Boolean(this.viewAllConfig.enabled && this.viewAllConfig.url);
+    },
+    viewAllLabel() {
+      return this.viewAllConfig.label || 'Ver todos';
+    },
+    viewAllUrl() {
+      return this.viewAllConfig.url || '/products';
+    },
+    viewAllConfig() {
+      return this.renderedData.view_all || this.section.configuration?.view_all || {
+        enabled: true,
+        label: 'Ver todos',
+        url: '/products',
+      };
     },
   },
   methods: {

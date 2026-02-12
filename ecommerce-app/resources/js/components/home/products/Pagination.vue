@@ -2,6 +2,14 @@
   <nav v-if="lastPage > 1" class="mt-8 flex flex-wrap items-center justify-center gap-2" aria-label="Paginación">
     <button
       class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+      :disabled="currentPage === 1 || loading"
+      @click="$emit('page-change', 1)"
+    >
+      Primera
+    </button>
+
+    <button
+      class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
       :disabled="!hasPrev || loading"
       @click="$emit('page-change', currentPage - 1)"
     >
@@ -27,6 +35,14 @@
       @click="$emit('page-change', currentPage + 1)"
     >
       Siguiente
+    </button>
+
+    <button
+      class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+      :disabled="currentPage === lastPage || loading"
+      @click="$emit('page-change', lastPage)"
+    >
+      Última
     </button>
   </nav>
 </template>

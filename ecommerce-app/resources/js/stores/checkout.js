@@ -208,6 +208,66 @@ export const useCheckoutStore = defineStore('checkout', {
     },
 
     /**
+     * Load user addresses if authenticated
+     */
+    async loadUserAddresses() {
+      try {
+        const response = await checkoutService.getUserAddresses();
+        const addresses = response.data || response;
+        
+        if (addresses && addresses.length > 0) {
+          // Find default shipping address
+          const defaultShipping = addresses.find(addr => 
+            addr.type === 'shipping' && addr.is_default
+          );
+          
+          // Find default billing address
+          const defaultBilling = addresses.find(addr => 
+            addr.type === 'billing' && addr.is_default
+          );
+          
+          // Use default shipping or first shipping address
+          const shippingAddr = defaultShipping || addresses.find(addr => addr.type === 'shipping');
+          if (shippingAddr) {
+            this.shippingAddress = {
+              fullName: `${shippingAddr.first_name} ${shippingAddr.last_name}`,
+              addressLine1: shippingAddr.address_line_1 || shippingAddr.address_line1,
+              addressLine2: shippingAddr.address_line_2 || shippingAddr.address_line2 || '',
+              city: shippingAddr.city,
+              state: shippingAddr.state,
+              postalCode: shippingAddr.postal_code,
+              country: shippingAddr.country,
+            };
+          }
+          
+          // Use default billing or first billing address
+          const billingAddr = defaultBilling || addresses.find(addr => addr.type === 'billing');
+          if (billingAddr) {
+            this.billingAddress = {
+              fullName: `${billingAddr.first_name} ${billingAddr.last_name}`,
+              addressLine1: billingAddr.address_line_1 || billingAddr.address_line1,
+              addressLine2: billingAddr.address_line_2 || billingAddr.address_line2 || '',
+              city: billingAddr.city,
+              state: billingAddr.state,
+              postalCode: billingAddr.postal_code,
+              country: billingAddr.country,
+            };
+          } else if (shippingAddr) {
+            // If no billing address, use shipping address
+            this.billingAddress = { ...this.shippingAddress };
+            this.useSameAddress = true;
+          }
+        }
+        
+        return { success: true };
+      } catch (error) {
+        // If user is not authenticated or has no addresses, just continue
+        console.log('No user addresses loaded:', error.response?.status);
+        return { success: false };
+      }
+    },
+
+    /**
      * Load cart from API
      */
     async loadCart() {

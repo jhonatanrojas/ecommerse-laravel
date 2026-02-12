@@ -43,4 +43,9 @@ router.beforeEach((to, from, next) => {
   next();
 });
 
+// Handle initial route on page load
+router.isReady().then(() => {
+  console.log('Router ready, current route:', router.currentRoute.value.path);
+});
+
 export default router;

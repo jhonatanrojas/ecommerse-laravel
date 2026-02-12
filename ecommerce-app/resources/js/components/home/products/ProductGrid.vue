@@ -22,6 +22,7 @@
         :key="product.id"
         :product="product"
         :adding="addingProductId === product.id"
+        :just-added="justAddedProductId === product.id"
         @add-to-cart="$emit('add-to-cart', $event)"
       />
     </div>
@@ -45,6 +46,10 @@ defineProps({
     default: false,
   },
   addingProductId: {
+    type: [Number, null],
+    default: null,
+  },
+  justAddedProductId: {
     type: [Number, null],
     default: null,
   },

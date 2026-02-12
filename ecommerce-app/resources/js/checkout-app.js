@@ -5,11 +5,13 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import router from './router';
 
-// Import main checkout page
-import CheckoutPage from './Pages/CheckoutPage.vue';
+// Create a root component that uses router-view
+const App = {
+  template: '<router-view />'
+};
 
 // Create Vue app
-const app = createApp(CheckoutPage);
+const app = createApp(App);
 
 // Use Pinia for state management
 const pinia = createPinia();

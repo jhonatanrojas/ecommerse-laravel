@@ -46,4 +46,35 @@ class CustomerOrderController extends Controller
         
         return response()->json(OrderResource::collection($orders));
     }
+
+    /**
+     * Display the specified order.
+     * 
+     * Retrieves a specific order for the authenticated user's customer profile.
+     * Returns 404 if order doesn't exist or doesn't belong to the user.
+     * 
+     * @param string $uuid Order UUID
+     * @return JsonResponse
+     */
+    public function show(string $uuid): JsonResponse
+    {
+        $user = auth()->user();
+        
+        // Check if user has a customer profile
+        if (!$user->customer) {
+            return response()->json([
+                'message' => 'Usuario no tiene perfil de cliente.'
+            ], 403);
+        }
+        
+        $order = $this->customerService->getOrder($user->customer, $uuid);
+        
+        if (!$order) {
+            return response()->json([
+                'message' => 'Pedido no encontrado.'
+            ], 404);
+        }
+        
+        return response()->json(new OrderResource($order));
+    }
 }

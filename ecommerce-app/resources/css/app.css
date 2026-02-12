@@ -30,6 +30,7 @@
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --space-section-y: clamp(3rem, 5vw, 5.5rem);
 }
 
 /* ========================================
@@ -59,7 +60,8 @@
 @layer components {
   /* Section spacing */
   .section-padding {
-    @apply py-16 md:py-20 lg:py-24;
+    padding-top: var(--space-section-y);
+    padding-bottom: var(--space-section-y);
   }
 
   .section-padding-sm {
@@ -68,7 +70,7 @@
 
   /* Section header */
   .section-header {
-    @apply text-center mb-10 md:mb-14;
+    @apply text-center mb-8 md:mb-12;
   }
 
   .section-title {
@@ -91,6 +93,7 @@
   .card {
     background: white;
     border-radius: var(--radius-lg);
+    border: 1px solid #f1f5f9;
     box-shadow: var(--shadow-card);
     transition: box-shadow var(--transition-base), transform var(--transition-base);
   }
@@ -173,6 +176,10 @@
   /* Skeleton loader */
   .skeleton {
     @apply animate-pulse bg-gray-200 rounded;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 focus-visible:ring-offset-2;
   }
 }
 

@@ -31,12 +31,15 @@ class OrderResource extends JsonResource
             'payment_status' => $this->payment_status->value,
             'subtotal' => $this->subtotal,
             'discount' => $this->discount,
-            'tax_amount' => $this->tax,
-            'shipping_amount' => $this->shipping_cost,
+            'tax' => $this->tax,
+            'tax_amount' => $this->tax, // Alias for compatibility
+            'shipping_cost' => $this->shipping_cost,
+            'shipping_amount' => $this->shipping_cost, // Alias for compatibility
             'total' => $this->total,
             'coupon_code' => $this->coupon_code,
             'payment_method' => $this->payment_method,
             'shipping_method' => $this->shipping_method,
+            'notes' => $this->notes,
             'customer_notes' => $this->customer_notes,
             'shipped_at' => $this->shipped_at?->toIso8601String(),
             'delivered_at' => $this->delivered_at?->toIso8601String(),
@@ -45,7 +48,9 @@ class OrderResource extends JsonResource
             'updated_at' => $this->updated_at->toIso8601String(),
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'shipping_address' => new AddressResource($this->whenLoaded('shippingAddress')),
+            'shippingAddress' => new AddressResource($this->whenLoaded('shippingAddress')), // Alias for compatibility
             'billing_address' => new AddressResource($this->whenLoaded('billingAddress')),
+            'billingAddress' => new AddressResource($this->whenLoaded('billingAddress')), // Alias for compatibility
         ];
     }
 }

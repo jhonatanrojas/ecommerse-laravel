@@ -16,6 +16,7 @@ class FeaturedProductsRenderer implements SectionRendererInterface
     {
         $config = $section->configuration;
         $limit = $config['limit'] ?? 8;
+        $viewAll = $config['view_all'] ?? [];
 
         $products = $section->items()
             ->with(['itemable.images', 'itemable.category'])
@@ -59,6 +60,11 @@ class FeaturedProductsRenderer implements SectionRendererInterface
             'columns' => $config['columns'] ?? 4,
             'show_price' => $config['show_price'] ?? true,
             'show_rating' => $config['show_rating'] ?? true,
+            'view_all' => [
+                'enabled' => (bool) ($viewAll['enabled'] ?? true),
+                'label' => $viewAll['label'] ?? 'Ver todos',
+                'url' => $viewAll['url'] ?? '/products',
+            ],
             'products' => $products->toArray(),
         ];
     }

@@ -94,14 +94,26 @@ import CheckoutInput from './CheckoutInput.vue';
 const checkoutStore = useCheckoutStore();
 
 const countryOptions = [
-  { value: 'ES', label: 'España' },
-  { value: 'MX', label: 'México' },
-  { value: 'AR', label: 'Argentina' },
-  { value: 'CO', label: 'Colombia' },
-  { value: 'CL', label: 'Chile' },
-  { value: 'PE', label: 'Perú' },
-  { value: 'VE', label: 'Venezuela' },
   { value: 'US', label: 'Estados Unidos' },
+  { value: 'AR', label: 'Argentina' },
+  { value: 'BO', label: 'Bolivia' },
+  { value: 'BR', label: 'Brasil' },
+  { value: 'CL', label: 'Chile' },
+  { value: 'CO', label: 'Colombia' },
+  { value: 'CR', label: 'Costa Rica' },
+  { value: 'CU', label: 'Cuba' },
+  { value: 'EC', label: 'Ecuador' },
+  { value: 'SV', label: 'El Salvador' },
+  { value: 'GT', label: 'Guatemala' },
+  { value: 'HN', label: 'Honduras' },
+  { value: 'MX', label: 'México' },
+  { value: 'NI', label: 'Nicaragua' },
+  { value: 'PA', label: 'Panamá' },
+  { value: 'PY', label: 'Paraguay' },
+  { value: 'PE', label: 'Perú' },
+  { value: 'DO', label: 'República Dominicana' },
+  { value: 'UY', label: 'Uruguay' },
+  { value: 'VE', label: 'Venezuela' },
 ];
 
 const localAddress = reactive({
@@ -124,6 +136,13 @@ const fieldErrors = reactive({
 });
 
 const storeErrors = computed(() => checkoutStore.errors.shipping_address || []);
+
+// Watch for changes in store address (when loaded from user addresses)
+watch(() => checkoutStore.shippingAddress, (newAddress) => {
+  if (newAddress.fullName && !localAddress.fullName) {
+    Object.assign(localAddress, newAddress);
+  }
+}, { deep: true, immediate: true });
 
 const validateField = (fieldName) => {
   fieldErrors[fieldName] = '';

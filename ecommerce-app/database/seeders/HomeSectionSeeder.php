@@ -10,14 +10,27 @@ use Illuminate\Database\Seeder;
 
 class HomeSectionSeeder extends Seeder
 {
+    private function upsertSection(string $type, array $attributes): HomeSection
+    {
+        $section = HomeSection::withTrashed()->updateOrCreate(
+            ['type' => $type],
+            $attributes
+        );
+
+        if ($section->trashed()) {
+            $section->restore();
+        }
+
+        return $section;
+    }
+
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
         // 1. Hero Section
-        HomeSection::create([
-            'type' => 'hero',
+        $this->upsertSection('hero', [
             'title' => 'Hero Principal',
             'is_active' => true,
             'display_order' => 1,
@@ -43,8 +56,7 @@ class HomeSectionSeeder extends Seeder
         ]);
 
         // 2. Featured Products Section
-        $featuredProductsSection = HomeSection::create([
-            'type' => 'featured_products',
+        $featuredProductsSection = $this->upsertSection('featured_products', [
             'title' => 'Productos Destacados',
             'is_active' => true,
             'display_order' => 2,
@@ -56,8 +68,16 @@ class HomeSectionSeeder extends Seeder
                 'columns' => 4,
                 'show_price' => true,
                 'show_rating' => true,
+                'view_all' => [
+                    'enabled' => true,
+                    'label' => 'Ver todos',
+                    'url' => '/products',
+                ],
             ]
         ]);
+
+        // Reset section items to avoid duplicates on reseed
+        $featuredProductsSection->items()->delete();
 
         // Add featured products if they exist
         $products = Product::where('is_featured', true)->take(8)->get();
@@ -71,8 +91,7 @@ class HomeSectionSeeder extends Seeder
         }
 
         // 3. Featured Categories Section
-        $featuredCategoriesSection = HomeSection::create([
-            'type' => 'featured_categories',
+        $featuredCategoriesSection = $this->upsertSection('featured_categories', [
             'title' => 'Categorías Destacadas',
             'is_active' => true,
             'display_order' => 3,
@@ -83,8 +102,16 @@ class HomeSectionSeeder extends Seeder
                 'layout' => 'grid',
                 'columns' => 3,
                 'show_product_count' => true,
+                'view_all' => [
+                    'enabled' => true,
+                    'label' => 'Ver todas',
+                    'url' => '/categories',
+                ],
             ]
         ]);
+
+        // Reset section items to avoid duplicates on reseed
+        $featuredCategoriesSection->items()->delete();
 
         // Add featured categories if they exist
         $categories = Category::take(6)->get();
@@ -98,8 +125,7 @@ class HomeSectionSeeder extends Seeder
         }
 
         // 4. Promo Banners Section
-        HomeSection::create([
-            'type' => 'banners',
+        $this->upsertSection('banners', [
             'title' => 'Banners Promocionales',
             'is_active' => true,
             'display_order' => 4,
@@ -134,8 +160,7 @@ class HomeSectionSeeder extends Seeder
         ]);
 
         // 5. Testimonials Section
-        HomeSection::create([
-            'type' => 'testimonials',
+        $this->upsertSection('testimonials', [
             'title' => 'Testimonios',
             'is_active' => true,
             'display_order' => 5,
@@ -171,8 +196,7 @@ class HomeSectionSeeder extends Seeder
         ]);
 
         // 6. Custom HTML Block Section (Inactive by default)
-        HomeSection::create([
-            'type' => 'html_block',
+        $this->upsertSection('html_block', [
             'title' => 'Bloque HTML Personalizado',
             'is_active' => false,
             'display_order' => 6,

@@ -78,14 +78,44 @@
       />
     </div>
 
-    <InputText
-      name="country"
-      label="País"
-      v-model="form.country"
-      :error="fieldError('country') || localErrors.country"
-      autocomplete="country-name"
-      required
-    />
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">
+        País <span class="text-red-500">*</span>
+      </label>
+      <select
+        name="country"
+        v-model="form.country"
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+        :class="{ 'border-red-500': fieldError('country') || localErrors.country }"
+        autocomplete="country"
+        required
+      >
+        <option value="">Seleccione un país</option>
+        <option value="US">Estados Unidos</option>
+        <option value="AR">Argentina</option>
+        <option value="BO">Bolivia</option>
+        <option value="BR">Brasil</option>
+        <option value="CL">Chile</option>
+        <option value="CO">Colombia</option>
+        <option value="CR">Costa Rica</option>
+        <option value="CU">Cuba</option>
+        <option value="EC">Ecuador</option>
+        <option value="SV">El Salvador</option>
+        <option value="GT">Guatemala</option>
+        <option value="HN">Honduras</option>
+        <option value="MX">México</option>
+        <option value="NI">Nicaragua</option>
+        <option value="PA">Panamá</option>
+        <option value="PY">Paraguay</option>
+        <option value="PE">Perú</option>
+        <option value="DO">República Dominicana</option>
+        <option value="UY">Uruguay</option>
+        <option value="VE">Venezuela</option>
+      </select>
+      <p v-if="fieldError('country') || localErrors.country" class="text-sm text-red-600 mt-1">
+        {{ fieldError('country') || localErrors.country }}
+      </p>
+    </div>
 
     <div class="space-y-2">
       <label class="block text-sm font-medium text-gray-700">
@@ -225,8 +255,8 @@ const submit = () => {
     first_name: form.first_name.trim(),
     last_name: form.last_name.trim(),
     phone: form.phone.trim(),
-    address_line_1: form.address_line_1.trim(),
-    address_line_2: form.address_line_2.trim(),
+    address_line1: form.address_line_1.trim(),
+    address_line2: form.address_line_2.trim(),
     city: form.city.trim(),
     state: form.state.trim(),
     postal_code: form.postal_code.trim(),

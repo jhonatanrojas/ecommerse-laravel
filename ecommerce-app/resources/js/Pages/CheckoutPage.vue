@@ -75,6 +75,11 @@ onMounted(async () => {
   await checkoutStore.loadStoreConfig();
   await checkoutStore.loadCart();
 
+  // Load user addresses if authenticated
+  if (authStore.isAuthenticated) {
+    await checkoutStore.loadUserAddresses();
+  }
+
   if (!checkoutStore.allowGuestCheckout && !checkoutStore.isEmpty && !authStore.isAuthenticated) {
     window.location.href = '/login?redirect=/checkout';
   }

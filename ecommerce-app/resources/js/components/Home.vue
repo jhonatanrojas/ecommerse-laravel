@@ -12,10 +12,13 @@
     <!-- ===== HEADER ===== -->
     <header
       class="sticky top-0 z-50 transition-all duration-300"
-      :class="scrolled ? 'bg-white shadow-md' : 'bg-white/95 backdrop-blur-md'"
+      :class="scrolled ? 'bg-white/95 shadow-sm ring-1 ring-black/5 backdrop-blur-md' : 'bg-white/90 backdrop-blur-md'"
     >
       <div class="container mx-auto px-4">
-        <div class="flex items-center justify-between h-16 md:h-18 gap-4">
+        <div
+          class="flex items-center justify-between gap-4 transition-all duration-300"
+          :class="scrolled ? 'h-14 md:h-16' : 'h-16 md:h-20'"
+        >
 
           <!-- Logo -->
           <a href="/" class="flex-shrink-0">
@@ -167,7 +170,7 @@
           leave-from-class="opacity-100"
           leave-to-class="opacity-0"
         >
-          <div v-if="mobileMenuOpen" class="lg:hidden border-t border-gray-100 py-4 max-h-[70vh] overflow-y-auto">
+          <div v-if="mobileMenuOpen" class="lg:hidden border-t border-gray-100 py-4 max-h-[70vh] overflow-y-auto bg-white/95 rounded-b-2xl">
             <Navigation location="header" variant="mobile" />
             <div class="mt-4 pt-4 border-t border-gray-100 space-y-2">
               <a :href="accountUrl" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
@@ -175,6 +178,20 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
                 Mi Cuenta
+              </a>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-2 px-1">
+              <a href="/products" class="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 hover:border-indigo-200 hover:text-indigo-700">
+                Tienda
+              </a>
+              <a href="/deals" class="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 hover:border-indigo-200 hover:text-indigo-700">
+                Ofertas
+              </a>
+              <a href="/checkout" class="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 hover:border-indigo-200 hover:text-indigo-700">
+                Checkout
+              </a>
+              <a href="/contact" class="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 hover:border-indigo-200 hover:text-indigo-700">
+                Soporte
               </a>
             </div>
           </div>
@@ -185,9 +202,22 @@
     <!-- ===== MAIN CONTENT ===== -->
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex flex-col justify-center items-center min-h-[60vh] gap-4">
-      <div class="w-12 h-12 border-3 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-      <p class="text-sm text-gray-400">Cargando contenido...</p>
+    <div v-if="loading" class="container mx-auto px-4 py-12 md:py-16 space-y-8">
+      <div class="rounded-3xl bg-gray-100/80 animate-pulse h-[340px] md:h-[460px]"></div>
+      <div class="space-y-3">
+        <div class="h-7 w-56 bg-gray-200 rounded-lg animate-pulse"></div>
+        <div class="h-4 w-80 max-w-full bg-gray-100 rounded-lg animate-pulse"></div>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        <div v-for="n in 8" :key="`home-skeleton-${n}`" class="rounded-2xl border border-gray-100 bg-white p-3">
+          <div class="aspect-square bg-gray-100 rounded-xl animate-pulse"></div>
+          <div class="mt-4 space-y-2">
+            <div class="h-3 w-20 bg-gray-100 rounded animate-pulse"></div>
+            <div class="h-4 w-10/12 bg-gray-200 rounded animate-pulse"></div>
+            <div class="h-4 w-7/12 bg-gray-100 rounded animate-pulse"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -212,8 +242,6 @@
         :is="getSectionComponent(section.type)"
         :section="section"
       />
-
-      <HomeProductsSection @show-toast="showToast" />
 
       <!-- Static sections (always rendered after dynamic sections) -->
       <BenefitsSection />
@@ -316,20 +344,20 @@
 </template>
 
 <script>
-import { onMounted, computed } from 'vue';
-import HeroSection from './sections/HeroSection.vue';
-import FeaturedProductsSection from './sections/FeaturedProductsSection.vue';
-import FeaturedCategoriesSection from './sections/FeaturedCategoriesSection.vue';
-import BannersSection from './sections/BannersSection.vue';
-import TestimonialsSection from './sections/TestimonialsSection.vue';
-import HtmlBlockSection from './sections/HtmlBlockSection.vue';
-import BenefitsSection from './sections/BenefitsSection.vue';
-import NewsletterSection from './sections/NewsletterSection.vue';
-import TrustBadges from './sections/TrustBadges.vue';
-import HomeProductsSection from './home/HomeProductsSection.vue';
+import { onMounted, computed, defineAsyncComponent } from 'vue';
 import Navigation from '../Components/Navigation.vue';
 import { useCartStore } from '../stores/cart';
 import { useAuthStore } from '../stores/auth';
+
+const HeroSection = defineAsyncComponent(() => import('./sections/HeroSection.vue'));
+const FeaturedProductsSection = defineAsyncComponent(() => import('./sections/FeaturedProductsSection.vue'));
+const FeaturedCategoriesSection = defineAsyncComponent(() => import('./sections/FeaturedCategoriesSection.vue'));
+const BannersSection = defineAsyncComponent(() => import('./sections/BannersSection.vue'));
+const TestimonialsSection = defineAsyncComponent(() => import('./sections/TestimonialsSection.vue'));
+const HtmlBlockSection = defineAsyncComponent(() => import('./sections/HtmlBlockSection.vue'));
+const BenefitsSection = defineAsyncComponent(() => import('./sections/BenefitsSection.vue'));
+const NewsletterSection = defineAsyncComponent(() => import('./sections/NewsletterSection.vue'));
+const TrustBadges = defineAsyncComponent(() => import('./sections/TrustBadges.vue'));
 
 export default {
   name: 'Home',
@@ -343,7 +371,6 @@ export default {
     BenefitsSection,
     NewsletterSection,
     TrustBadges,
-    HomeProductsSection,
     Navigation,
   },
   setup() {

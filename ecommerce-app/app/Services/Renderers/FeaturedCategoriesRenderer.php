@@ -16,6 +16,7 @@ class FeaturedCategoriesRenderer implements SectionRendererInterface
     {
         $config = $section->configuration;
         $limit = $config['limit'] ?? 6;
+        $viewAll = $config['view_all'] ?? [];
 
         $categories = $section->items()
             ->limit($limit)
@@ -57,6 +58,11 @@ class FeaturedCategoriesRenderer implements SectionRendererInterface
             'layout' => $config['layout'] ?? 'grid',
             'columns' => $config['columns'] ?? 3,
             'show_product_count' => $config['show_product_count'] ?? true,
+            'view_all' => [
+                'enabled' => (bool) ($viewAll['enabled'] ?? true),
+                'label' => $viewAll['label'] ?? 'Ver todas',
+                'url' => $viewAll['url'] ?? '/categories',
+            ],
             'categories' => $categories->toArray(),
         ];
     }

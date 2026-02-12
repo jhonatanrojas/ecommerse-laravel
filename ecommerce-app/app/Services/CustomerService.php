@@ -33,4 +33,25 @@ class CustomerService
             ->orderBy('created_at', 'desc')
             ->get();
     }
+
+    /**
+     * Get a specific order for a customer.
+     * 
+     * Retrieves a single order by UUID if it belongs to the customer.
+     * 
+     * @param Customer $customer The customer whose order to retrieve
+     * @param string $uuid The order UUID
+     * @return \App\Models\Order|null The order or null if not found
+     */
+    public function getOrder(Customer $customer, string $uuid)
+    {
+        return $customer->user->orders()
+            ->where('uuid', $uuid)
+            ->with([
+                'items.product.images',
+                'shippingAddress',
+                'billingAddress'
+            ])
+            ->first();
+    }
 }

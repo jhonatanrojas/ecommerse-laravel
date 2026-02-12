@@ -1,14 +1,14 @@
 <template>
-  <div class="w-full">
-    <label 
-      v-if="label" 
-      :for="id" 
-      class="block text-sm font-medium text-gray-700 mb-1"
+  <div class="w-full space-y-1.5">
+    <label
+      v-if="label"
+      :for="id"
+      class="block text-sm font-medium text-gray-700"
     >
       {{ label }}
       <span v-if="required" class="text-red-500">*</span>
     </label>
-    
+
     <input
       :id="id"
       :type="type"
@@ -18,24 +18,14 @@
       :required="required"
       :disabled="disabled"
       :autocomplete="autocomplete"
+      class="w-full rounded-xl border px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 transition focus:outline-none focus:ring-2"
+      :class="inputClasses"
       @input="$emit('update:modelValue', $event.target.value)"
       @blur="$emit('blur')"
-      class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-      :class="[
-        error 
-          ? 'border-red-500 focus:ring-red-500' 
-          : 'border-gray-300',
-        disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-      ]"
     />
-    
-    <p v-if="error" class="mt-1 text-sm text-red-600">
-      {{ error }}
-    </p>
-    
-    <p v-else-if="hint" class="mt-1 text-sm text-gray-500">
-      {{ hint }}
-    </p>
+
+    <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
+    <p v-else-if="hint" class="text-xs text-gray-500">{{ hint }}</p>
   </div>
 </template>
 
@@ -92,4 +82,16 @@ const props = defineProps({
 defineEmits(['update:modelValue', 'blur']);
 
 const id = computed(() => props.id || props.name);
+
+const inputClasses = computed(() => {
+  if (props.disabled) {
+    return 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-500';
+  }
+
+  if (props.error) {
+    return 'border-red-300 bg-white focus:border-red-400 focus:ring-red-100';
+  }
+
+  return 'border-gray-200 bg-white focus:border-indigo-300 focus:ring-indigo-100';
+});
 </script>

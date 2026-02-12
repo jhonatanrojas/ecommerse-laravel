@@ -207,25 +207,56 @@
                   Órdenes realizadas
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                  Revisa tus compras anteriores.
+                  Revisa tus pedidos recientes o entra al historial completo.
                 </p>
               </div>
 
-              <button
-                type="button"
-                class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
-                @click="refreshOrders"
-                :disabled="customerStore.loading.orders"
+              <router-link
+                to="/customer/orders"
+                class="px-4 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition"
               >
-                {{ customerStore.loading.orders ? 'Actualizando...' : 'Actualizar' }}
-              </button>
+                Ver todas
+              </router-link>
             </div>
 
-            <div class="mt-6">
-              <OrderList
-                :orders="customerStore.orders"
-                :loading="customerStore.loading.orders"
-              />
+            <div v-if="customerStore.loading.orders" class="mt-6 space-y-3">
+              <div v-for="n in 3" :key="`dashboard-order-skeleton-${n}`" class="skeleton h-20 w-full rounded-xl"></div>
+            </div>
+
+            <div v-else-if="!customerStore.orders?.length" class="mt-6 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center">
+              <p class="text-sm font-semibold text-gray-800">Aún no tienes órdenes</p>
+              <p class="mt-1 text-sm text-gray-500">Cuando completes una compra aparecerá aquí.</p>
+              <a href="/" class="btn-primary mt-4 inline-flex px-4 py-2 text-sm">Explorar productos</a>
+            </div>
+
+            <div v-else class="mt-6 space-y-3">
+              <article
+                v-for="order in recentOrders"
+                :key="order.uuid"
+                class="rounded-xl border border-gray-100 p-4"
+              >
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900">Orden #{{ order.order_number }}</p>
+                    <p class="mt-1 text-xs text-gray-500">{{ formatDate(order.created_at) }}</p>
+                  </div>
+                  <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" :class="statusClass(order.status)">
+                    {{ statusLabel(order.status) }}
+                  </span>
+                </div>
+
+                <div class="mt-3 flex items-center justify-between">
+                  <p class="text-xs uppercase tracking-[0.12em] text-gray-500">Total</p>
+                  <p class="text-sm font-bold text-gray-900">{{ formatCurrency(order.total) }}</p>
+                </div>
+
+                <router-link
+                  :to="`/customer/orders/${order.uuid}`"
+                  class="mt-3 inline-flex rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                  Ver detalle
+                </router-link>
+              </article>
             </div>
           </div>
         </div>
@@ -235,7 +266,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useCustomerStore } from '../../stores/customer';
 import { useAuthStore } from '../../stores/auth';
 import { useToast } from '../../composables/useToast';
@@ -246,7 +277,6 @@ import FormError from '../../components/forms/FormError.vue';
 import PasswordForm from '../../components/customer/PasswordForm.vue';
 import AddressForm from '../../components/customer/AddressForm.vue';
 import AddressList from '../../components/customer/AddressList.vue';
-import OrderList from '../../components/customer/OrderList.vue';
 
 const customerStore = useCustomerStore();
 const authStore = useAuthStore();
@@ -258,6 +288,7 @@ const loggingOut = ref(false);
 const showAddressForm = ref(false);
 const editingAddress = ref(null);
 const prefillType = ref('shipping');
+const recentOrders = computed(() => (customerStore.orders || []).slice(0, 3));
 
 onMounted(async () => {
   setToastContainer(toastRef.value);
@@ -351,11 +382,47 @@ async function onUpdatePassword(payload) {
   toastError('No se pudo cambiar', result.message || 'Revisa los campos e intenta de nuevo.');
 }
 
-async function refreshOrders() {
-  const result = await customerStore.fetchOrders();
-  if (!result.success) {
-    toastError('No se pudo actualizar', result.message || 'Intenta de nuevo.');
-  }
+function statusLabel(status) {
+  const labels = {
+    pending: 'Pendiente',
+    processing: 'Pagado',
+    shipped: 'Enviado',
+    delivered: 'Completado',
+    cancelled: 'Cancelado',
+    refunded: 'Reembolsado',
+  };
+
+  return labels[status] || status;
+}
+
+function statusClass(status) {
+  const classes = {
+    pending: 'bg-amber-100 text-amber-700',
+    processing: 'bg-sky-100 text-sky-700',
+    shipped: 'bg-indigo-100 text-indigo-700',
+    delivered: 'bg-emerald-100 text-emerald-700',
+    cancelled: 'bg-red-100 text-red-700',
+    refunded: 'bg-gray-200 text-gray-700',
+  };
+
+  return classes[status] || 'bg-gray-100 text-gray-700';
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+
+  return new Intl.DateTimeFormat('es-ES', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(value));
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(Number(value || 0));
 }
 </script>
 

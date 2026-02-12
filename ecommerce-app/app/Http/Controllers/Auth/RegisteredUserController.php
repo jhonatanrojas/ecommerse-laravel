@@ -44,6 +44,11 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Crear perfil de cliente automáticamente
+        $user->customer()->create([
+            'phone' => $request->phone,
+        ]);
+
         event(new Registered($user));
 
         Auth::guard('customer')->login($user);

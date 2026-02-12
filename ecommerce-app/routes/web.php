@@ -18,6 +18,22 @@ Route::get('/', function () {
     return view('home');
 });
 
+Route::get('/products', function () {
+    return view('products');
+})->name('products.index');
+
+Route::get('/products/{slug}', function () {
+    return view('product-detail');
+})->name('products.show');
+
+Route::get('/categories', function () {
+    return view('categories');
+})->name('categories.index');
+
+Route::get('/categories/{slug}', function () {
+    return view('category-products');
+})->name('categories.show');
+
 // Checkout Routes
 Route::get('/checkout', function () {
     return view('checkout');
@@ -27,10 +43,12 @@ Route::get('/order-success/{orderId?}', function ($orderId = null) {
     return view('order-success');
 })->name('order.success');
 
-// Customer Dashboard (guard customer; opcional: verified)
-Route::get('/customer', function () {
-    return view('customer.dashboard');
-})->middleware(['auth:customer', 'verified'])->name('customer.dashboard');
+// Customer App (dashboard, órdenes y detalle)
+Route::middleware(['auth:customer', 'verified'])->group(function () {
+    Route::view('/customer', 'customer.dashboard')->name('customer.dashboard');
+    Route::view('/customer/orders', 'customer.dashboard')->name('customer.orders');
+    Route::view('/customer/orders/{id}', 'customer.dashboard')->name('customer.orders.show');
+});
 
 Route::middleware('auth:customer')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

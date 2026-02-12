@@ -10,13 +10,16 @@
         @mouseleave="closeDropdown(item.id)"
       >
         <button
-          class="nav-link flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-indigo-600 transition-colors duration-200"
-          :class="{ 'text-indigo-600': activeDropdown === item.id }"
+          class="nav-link flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 rounded-lg transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+          :class="{
+            'text-indigo-700 bg-indigo-50': activeDropdown === item.id || isItemActive(item),
+            'hover:bg-gray-50 hover:text-indigo-600': activeDropdown !== item.id && !isItemActive(item),
+          }"
           @click="toggleDropdown(item.id)"
           :aria-expanded="activeDropdown === item.id"
           aria-haspopup="true"
         >
-          <span>{{ item.label }}</span>
+          <span>{{ getItemLabel(item) }}</span>
           <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': activeDropdown === item.id }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
@@ -33,22 +36,46 @@
         >
           <div
             v-show="activeDropdown === item.id"
-            class="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-lg ring-1 ring-black/5 py-2 z-50"
+            class="absolute top-full left-0 mt-2 w-[min(90vw,760px)] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5 z-50"
           >
-            <a
-              v-for="child in item.children"
-              :key="child.id"
-              :href="child.url || '#'"
-              :target="child.target"
-              class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors duration-150"
-            >
-              <span>{{ child.label }}</span>
-              <span
-                v-if="child.badge_text"
-                class="ml-auto text-xs font-bold px-1.5 py-0.5 rounded-full"
-                :style="{ backgroundColor: child.badge_color || '#EF4444', color: 'white' }"
-              >{{ child.badge_text }}</span>
-            </a>
+            <div class="grid grid-cols-3">
+              <div class="col-span-2 p-5">
+                <p class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">
+                  Explora {{ getItemLabel(item) }}
+                </p>
+                <div class="grid grid-cols-2 gap-2">
+                  <a
+                    v-for="child in item.children"
+                    :key="child.id"
+                    :href="child.url || '#'"
+                    :target="child.target"
+                    class="flex min-h-[52px] items-center rounded-xl px-3 py-2.5 text-sm text-gray-700 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+                    :class="isItemActive(child) ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'hover:bg-indigo-50 hover:text-indigo-600'"
+                  >
+                    <span class="truncate">{{ child.label }}</span>
+                    <span
+                      v-if="child.badge_text"
+                      class="ml-auto text-[11px] font-bold px-1.5 py-0.5 rounded-full"
+                      :style="{ backgroundColor: child.badge_color || '#EF4444', color: 'white' }"
+                    >{{ child.badge_text }}</span>
+                  </a>
+                </div>
+              </div>
+
+              <div class="border-l border-gray-100 bg-gray-50 p-5">
+                <p class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Accesos rápidos</p>
+                <div class="space-y-2">
+                  <a
+                    v-for="link in getQuickExploreLinks(item)"
+                    :key="link.url"
+                    :href="link.url"
+                    class="block rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-indigo-200 hover:text-indigo-700"
+                  >
+                    {{ link.label }}
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </transition>
       </div>
@@ -58,9 +85,10 @@
         v-else
         :href="item.url || '#'"
         :target="item.target"
-        class="nav-link px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-indigo-600 transition-colors duration-200 flex items-center gap-1.5"
+        class="nav-link px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+        :class="isItemActive(item) ? 'text-indigo-700 bg-indigo-50' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600'"
       >
-        <span>{{ item.label }}</span>
+        <span>{{ getItemLabel(item) }}</span>
         <span
           v-if="item.badge_text"
           class="text-xs font-bold px-1.5 py-0.5 rounded-full"
@@ -77,8 +105,9 @@
         <a
           :href="item.url || '#'"
           :target="item.target"
-          class="text-gray-400 hover:text-white text-sm transition-colors duration-200 block"
-        >{{ item.label }}</a>
+          class="text-gray-400 hover:text-white text-sm transition-colors duration-200 block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+          :class="isItemActive(item) ? 'text-white font-semibold' : ''"
+        >{{ getItemLabel(item) }}</a>
         <!-- Sub items -->
         <div v-if="item.children && item.children.length > 0" class="mt-2 ml-3 space-y-2">
           <a
@@ -100,9 +129,10 @@
       <div v-if="item.children && item.children.length > 0">
         <button
           @click="toggleDropdown(item.id)"
-          class="w-full flex items-center justify-between px-4 py-3 text-base font-medium text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+          class="w-full flex items-center justify-between px-4 py-3 text-base font-medium text-gray-800 hover:bg-gray-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+          :class="isItemActive(item) ? 'bg-indigo-50 text-indigo-700' : ''"
         >
-          <span>{{ item.label }}</span>
+          <span>{{ getItemLabel(item) }}</span>
           <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': activeDropdown === item.id }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
@@ -113,7 +143,8 @@
             :key="child.id"
             :href="child.url || '#'"
             :target="child.target"
-            class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+            class="block px-3 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+            :class="isItemActive(child) ? 'text-indigo-700 bg-indigo-50 font-semibold' : ''"
           >{{ child.label }}</a>
         </div>
       </div>
@@ -123,9 +154,10 @@
         v-else
         :href="item.url || '#'"
         :target="item.target"
-        class="block px-4 py-3 text-base font-medium text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+        class="block px-4 py-3 text-base font-medium text-gray-800 hover:bg-gray-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+        :class="isItemActive(item) ? 'bg-indigo-50 text-indigo-700' : ''"
       >
-        {{ item.label }}
+        {{ getItemLabel(item) }}
         <span
           v-if="item.badge_text"
           class="ml-2 text-xs font-bold px-1.5 py-0.5 rounded-full"
@@ -163,17 +195,36 @@ export default {
       loading: true,
       activeDropdown: null,
       closeTimeout: null,
+      currentPath: '/',
     };
   },
   mounted() {
+    this.currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+    window.addEventListener('popstate', this.handlePopState);
     this.fetchMenu();
+  },
+  beforeUnmount() {
+    window.removeEventListener('popstate', this.handlePopState);
   },
   methods: {
     async fetchMenu() {
+      const storageKey = `menu:${this.location}`;
+      const cachedMenu = sessionStorage.getItem(storageKey);
+
+      if (cachedMenu) {
+        try {
+          this.menu = JSON.parse(cachedMenu);
+          this.loading = false;
+        } catch {
+          sessionStorage.removeItem(storageKey);
+        }
+      }
+
       try {
         const response = await fetch(`/api/menus/location/${this.location}`);
         if (response.ok) {
           this.menu = await response.json();
+          sessionStorage.setItem(storageKey, JSON.stringify(this.menu));
         }
       } catch (error) {
         console.error('Error fetching menu:', error);
@@ -197,6 +248,40 @@ export default {
           this.activeDropdown = null;
         }
       }, 150);
+    },
+    getItemLabel(item) {
+      if ((item?.url || '').toLowerCase() === '/products') {
+        return 'Tienda';
+      }
+      return item?.label || '';
+    },
+    getQuickExploreLinks(item) {
+      if ((item?.url || '').toLowerCase() === '/products') {
+        return [
+          { label: 'Ver tienda completa', url: '/products' },
+          { label: 'Ofertas de hoy', url: '/deals' },
+          { label: 'Finalizar compra', url: '/checkout' },
+        ];
+      }
+
+      return [
+        { label: 'Inicio', url: '/' },
+        { label: 'Tienda', url: '/products' },
+        { label: 'Soporte', url: '/contact' },
+      ];
+    },
+    handlePopState() {
+      this.currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+    },
+    isItemActive(item) {
+      const url = (item?.url || '').replace(/\/$/, '') || '/';
+      if (!url || url === '#') {
+        return false;
+      }
+      if (url === '/') {
+        return this.currentPath === '/';
+      }
+      return this.currentPath === url || this.currentPath.startsWith(`${url}/`);
     },
   },
 };

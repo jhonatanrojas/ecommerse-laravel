@@ -87,10 +87,10 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            Category::create($category);
+            Category::updateOrCreate(
+                ['slug' => $category['slug']],
+                $category
+            );
         }
-
-        // Crear categorías adicionales aleatorias
-        Category::factory()->count(12)->create();
     }
 }
