@@ -1,55 +1,38 @@
 <template>
-  <div class="payment-methods space-y-3">
-    <!-- Payment Method Options -->
-    <div
+  <div class="space-y-3">
+    <button
       v-for="method in availableMethods"
       :key="method.id"
-      class="payment-method-card border rounded-lg p-4 cursor-pointer transition-all"
-      :class="{
-        'border-blue-500 bg-blue-50': isSelected(method.id),
-        'border-gray-300 hover:border-gray-400': !isSelected(method.id),
-      }"
+      type="button"
+      class="w-full rounded-xl border p-4 text-left transition"
+      :class="isSelected(method.id)
+        ? 'border-indigo-300 bg-indigo-50/70 ring-2 ring-indigo-100'
+        : 'border-gray-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/30'"
       @click="selectMethod(method)"
     >
-      <div class="flex items-start">
-        <!-- Radio Button -->
-        <div class="flex items-center h-5 mt-1">
-          <input
-            :id="`payment-${method.id}`"
-            type="radio"
-            :value="method.id"
-            :checked="isSelected(method.id)"
-            class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-            @change="selectMethod(method)"
-          />
-        </div>
+      <div class="flex items-start gap-3">
+        <input
+          :id="`payment-${method.id}`"
+          type="radio"
+          :checked="isSelected(method.id)"
+          class="mt-1 h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          @change="selectMethod(method)"
+        />
 
-        <!-- Method Details -->
-        <div class="ml-3 flex-1">
-          <label
-            :for="`payment-${method.id}`"
-            class="block text-sm font-medium text-gray-900 cursor-pointer"
-          >
+        <div class="min-w-0 flex-1">
+          <label :for="`payment-${method.id}`" class="cursor-pointer text-sm font-semibold text-gray-900">
             {{ method.name }}
           </label>
-          <p class="text-sm text-gray-600 mt-1">
-            {{ method.description }}
-          </p>
+          <p class="mt-1 text-sm text-gray-600">{{ method.description }}</p>
         </div>
 
-        <!-- Icon (optional) -->
-        <div v-if="method.icon" class="ml-4">
-          <div class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded">
-            <span class="text-xs text-gray-600">{{ getIconDisplay(method.icon) }}</span>
-          </div>
+        <div v-if="method.icon" class="rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+          {{ getIconDisplay(method.icon) }}
         </div>
       </div>
-    </div>
+    </button>
 
-    <!-- Error Message -->
-    <p v-if="hasError" class="text-sm text-red-600 mt-2">
-      {{ errorMessage }}
-    </p>
+    <p v-if="hasError" class="text-sm text-red-600">{{ errorMessage }}</p>
   </div>
 </template>
 
@@ -59,42 +42,22 @@ import { useCheckoutStore } from '../../stores/checkout';
 
 const checkoutStore = useCheckoutStore();
 
-// Available payment methods from store
 const availableMethods = computed(() => checkoutStore.availablePaymentMethods);
-
-// Selected method
 const selectedMethod = computed(() => checkoutStore.paymentMethod);
-
-// Error handling
 const hasError = computed(() => checkoutStore.errors.payment_method);
-const errorMessage = computed(() => {
-  return checkoutStore.errors.payment_method?.[0] || '';
-});
+const errorMessage = computed(() => checkoutStore.errors.payment_method?.[0] || '');
 
-/**
- * Check if method is selected
- */
-const isSelected = (methodId) => {
-  return selectedMethod.value?.id === methodId;
-};
+const isSelected = (methodId) => selectedMethod.value?.id === methodId;
+const selectMethod = (method) => checkoutStore.setPaymentMethod(method);
 
-/**
- * Select payment method
- */
-const selectMethod = (method) => {
-  checkoutStore.setPaymentMethod(method);
-};
-
-/**
- * Get icon display (simplified for now)
- */
 const getIconDisplay = (icon) => {
   const iconMap = {
-    'credit-card': '💳',
-    'paypal': 'PP',
-    'bank': '🏦',
-    'cash': '💵',
+    'credit-card': 'Tarjeta',
+    paypal: 'PayPal',
+    bank: 'Banco',
+    cash: 'Efectivo',
   };
-  return iconMap[icon] || '💳';
+
+  return iconMap[icon] || 'Pago';
 };
 </script>

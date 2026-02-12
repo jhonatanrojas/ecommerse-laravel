@@ -1,58 +1,37 @@
 <template>
-  <div class="shipping-methods space-y-3">
-    <!-- Shipping Method Options -->
-    <div
+  <div class="space-y-3">
+    <button
       v-for="method in availableMethods"
       :key="method.id"
-      class="shipping-method-card border rounded-lg p-4 cursor-pointer transition-all"
-      :class="{
-        'border-blue-500 bg-blue-50': isSelected(method.id),
-        'border-gray-300 hover:border-gray-400': !isSelected(method.id),
-      }"
+      type="button"
+      class="w-full rounded-xl border p-4 text-left transition"
+      :class="isSelected(method.id)
+        ? 'border-indigo-300 bg-indigo-50/70 ring-2 ring-indigo-100'
+        : 'border-gray-200 bg-white hover:border-indigo-200 hover:bg-indigo-50/30'"
       @click="selectMethod(method)"
     >
-      <div class="flex items-start">
-        <!-- Radio Button -->
-        <div class="flex items-center h-5 mt-1">
-          <input
-            :id="`shipping-${method.id}`"
-            type="radio"
-            :value="method.id"
-            :checked="isSelected(method.id)"
-            class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-            @change="selectMethod(method)"
-          />
-        </div>
+      <div class="flex items-start gap-3">
+        <input
+          :id="`shipping-${method.id}`"
+          type="radio"
+          :checked="isSelected(method.id)"
+          class="mt-1 h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          @change="selectMethod(method)"
+        />
 
-        <!-- Method Details -->
-        <div class="ml-3 flex-1">
-          <label
-            :for="`shipping-${method.id}`"
-            class="block text-sm font-medium text-gray-900 cursor-pointer"
-          >
+        <div class="min-w-0 flex-1">
+          <label :for="`shipping-${method.id}`" class="cursor-pointer text-sm font-semibold text-gray-900">
             {{ method.name }}
           </label>
-          <p class="text-sm text-gray-600 mt-1">
-            {{ method.description }}
-          </p>
-          <p class="text-xs text-gray-500 mt-1">
-            Tiempo estimado: {{ method.estimatedDays }}
-          </p>
+          <p class="mt-1 text-sm text-gray-600">{{ method.description }}</p>
+          <p class="mt-1 text-xs text-gray-500">Entrega estimada: {{ method.estimatedDays }}</p>
         </div>
 
-        <!-- Cost -->
-        <div class="ml-4 text-right">
-          <p class="text-lg font-semibold text-gray-900">
-            {{ formatCurrency(method.cost) }}
-          </p>
-        </div>
+        <p class="text-sm font-semibold text-gray-900">{{ formatCurrency(method.cost) }}</p>
       </div>
-    </div>
+    </button>
 
-    <!-- Error Message -->
-    <p v-if="hasError" class="text-sm text-red-600 mt-2">
-      {{ errorMessage }}
-    </p>
+    <p v-if="hasError" class="text-sm text-red-600">{{ errorMessage }}</p>
   </div>
 </template>
 
@@ -62,35 +41,14 @@ import { useCheckoutStore } from '../../stores/checkout';
 
 const checkoutStore = useCheckoutStore();
 
-// Available shipping methods from store
 const availableMethods = computed(() => checkoutStore.availableShippingMethods);
-
-// Selected method
 const selectedMethod = computed(() => checkoutStore.shippingMethod);
-
-// Error handling
 const hasError = computed(() => checkoutStore.errors.shipping_method);
-const errorMessage = computed(() => {
-  return checkoutStore.errors.shipping_method?.[0] || '';
-});
+const errorMessage = computed(() => checkoutStore.errors.shipping_method?.[0] || '');
 
-/**
- * Check if method is selected
- */
-const isSelected = (methodId) => {
-  return selectedMethod.value?.id === methodId;
-};
+const isSelected = (methodId) => selectedMethod.value?.id === methodId;
+const selectMethod = (method) => checkoutStore.setShippingMethod(method);
 
-/**
- * Select shipping method
- */
-const selectMethod = (method) => {
-  checkoutStore.setShippingMethod(method);
-};
-
-/**
- * Format currency
- */
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',

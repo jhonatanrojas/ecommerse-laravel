@@ -1,176 +1,124 @@
 <template>
-  <div class="billing-address-form space-y-4">
-    <!-- Same as Shipping Checkbox -->
-    <div class="flex items-center">
+  <div class="space-y-4">
+    <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
       <input
         id="useSameAddress"
         v-model="useSameAddress"
         type="checkbox"
-        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
         @change="handleSameAddressToggle"
       />
-      <label for="useSameAddress" class="ml-2 text-sm font-medium text-gray-700">
-        Usar la misma dirección de envío
-      </label>
+      <span class="text-sm font-medium text-gray-700">Usar la misma dirección de envío</span>
+    </label>
+
+    <div v-if="storeErrors.length && !useSameAddress" class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+      <p v-for="error in storeErrors" :key="error">{{ error }}</p>
     </div>
 
-    <!-- Billing Address Form (shown when not using same address) -->
-    <div v-if="!useSameAddress" class="space-y-4 pt-4">
-      <!-- Full Name -->
-      <div>
-        <label for="billing-fullName" class="block text-sm font-medium text-gray-700 mb-1">
-          Nombre Completo <span class="text-red-500">*</span>
-        </label>
-        <input
-          id="billing-fullName"
-          v-model="localAddress.fullName"
-          type="text"
-          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          :class="{ 'border-red-500': fieldErrors.fullName }"
-          placeholder="Juan Pérez"
-          @blur="validateField('fullName')"
+    <div v-if="!useSameAddress" class="space-y-4">
+      <CheckoutInput
+        id="billing-fullName"
+        v-model="localAddress.fullName"
+        label="Nombre completo"
+        placeholder="Juan Pérez"
+        required
+        :error="fieldErrors.fullName"
+        autocomplete="name"
+        @blur="validateField('fullName')"
+      />
+
+      <CheckoutInput
+        id="billing-addressLine1"
+        v-model="localAddress.addressLine1"
+        label="Dirección"
+        placeholder="Calle Principal 123"
+        required
+        :error="fieldErrors.addressLine1"
+        autocomplete="address-line1"
+        @blur="validateField('addressLine1')"
+      />
+
+      <CheckoutInput
+        id="billing-addressLine2"
+        v-model="localAddress.addressLine2"
+        label="Dirección línea 2"
+        placeholder="Apartamento, suite, etc."
+        autocomplete="address-line2"
+      />
+
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <CheckoutInput
+          id="billing-city"
+          v-model="localAddress.city"
+          label="Ciudad"
+          placeholder="Madrid"
+          required
+          :error="fieldErrors.city"
+          autocomplete="address-level2"
+          @blur="validateField('city')"
         />
-        <p v-if="fieldErrors.fullName" class="mt-1 text-sm text-red-600">
-          {{ fieldErrors.fullName }}
-        </p>
-      </div>
 
-      <!-- Address Line 1 -->
-      <div>
-        <label for="billing-addressLine1" class="block text-sm font-medium text-gray-700 mb-1">
-          Dirección <span class="text-red-500">*</span>
-        </label>
-        <input
-          id="billing-addressLine1"
-          v-model="localAddress.addressLine1"
-          type="text"
-          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          :class="{ 'border-red-500': fieldErrors.addressLine1 }"
-          placeholder="Calle Principal 123"
-          @blur="validateField('addressLine1')"
-        />
-        <p v-if="fieldErrors.addressLine1" class="mt-1 text-sm text-red-600">
-          {{ fieldErrors.addressLine1 }}
-        </p>
-      </div>
-
-      <!-- Address Line 2 (Optional) -->
-      <div>
-        <label for="billing-addressLine2" class="block text-sm font-medium text-gray-700 mb-1">
-          Dirección Línea 2 (Opcional)
-        </label>
-        <input
-          id="billing-addressLine2"
-          v-model="localAddress.addressLine2"
-          type="text"
-          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Apartamento, suite, etc."
+        <CheckoutInput
+          id="billing-state"
+          v-model="localAddress.state"
+          label="Estado / Provincia"
+          placeholder="Madrid"
+          required
+          :error="fieldErrors.state"
+          autocomplete="address-level1"
+          @blur="validateField('state')"
         />
       </div>
 
-      <!-- City and State -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- City -->
-        <div>
-          <label for="billing-city" class="block text-sm font-medium text-gray-700 mb-1">
-            Ciudad <span class="text-red-500">*</span>
-          </label>
-          <input
-            id="billing-city"
-            v-model="localAddress.city"
-            type="text"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            :class="{ 'border-red-500': fieldErrors.city }"
-            placeholder="Madrid"
-            @blur="validateField('city')"
-          />
-          <p v-if="fieldErrors.city" class="mt-1 text-sm text-red-600">
-            {{ fieldErrors.city }}
-          </p>
-        </div>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <CheckoutInput
+          id="billing-postalCode"
+          v-model="localAddress.postalCode"
+          label="Código postal"
+          placeholder="28001"
+          required
+          :error="fieldErrors.postalCode"
+          autocomplete="postal-code"
+          @blur="validateField('postalCode')"
+        />
 
-        <!-- State -->
-        <div>
-          <label for="billing-state" class="block text-sm font-medium text-gray-700 mb-1">
-            Estado/Provincia <span class="text-red-500">*</span>
-          </label>
-          <input
-            id="billing-state"
-            v-model="localAddress.state"
-            type="text"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            :class="{ 'border-red-500': fieldErrors.state }"
-            placeholder="Madrid"
-            @blur="validateField('state')"
-          />
-          <p v-if="fieldErrors.state" class="mt-1 text-sm text-red-600">
-            {{ fieldErrors.state }}
-          </p>
-        </div>
-      </div>
-
-      <!-- Postal Code and Country -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Postal Code -->
-        <div>
-          <label for="billing-postalCode" class="block text-sm font-medium text-gray-700 mb-1">
-            Código Postal <span class="text-red-500">*</span>
-          </label>
-          <input
-            id="billing-postalCode"
-            v-model="localAddress.postalCode"
-            type="text"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            :class="{ 'border-red-500': fieldErrors.postalCode }"
-            placeholder="28001"
-            @blur="validateField('postalCode')"
-          />
-          <p v-if="fieldErrors.postalCode" class="mt-1 text-sm text-red-600">
-            {{ fieldErrors.postalCode }}
-          </p>
-        </div>
-
-        <!-- Country -->
-        <div>
-          <label for="billing-country" class="block text-sm font-medium text-gray-700 mb-1">
-            País <span class="text-red-500">*</span>
-          </label>
-          <select
-            id="billing-country"
-            v-model="localAddress.country"
-            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            :class="{ 'border-red-500': fieldErrors.country }"
-            @blur="validateField('country')"
-          >
-            <option value="">Seleccionar país</option>
-            <option value="ES">España</option>
-            <option value="MX">México</option>
-            <option value="AR">Argentina</option>
-            <option value="CO">Colombia</option>
-            <option value="CL">Chile</option>
-            <option value="PE">Perú</option>
-            <option value="VE">Venezuela</option>
-            <option value="US">Estados Unidos</option>
-          </select>
-          <p v-if="fieldErrors.country" class="mt-1 text-sm text-red-600">
-            {{ fieldErrors.country }}
-          </p>
-        </div>
+        <CheckoutInput
+          id="billing-country"
+          v-model="localAddress.country"
+          type="select"
+          label="País"
+          placeholder="Seleccionar país"
+          required
+          :options="countryOptions"
+          :error="fieldErrors.country"
+          autocomplete="country"
+          @blur="validateField('country')"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, reactive } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useCheckoutStore } from '../../stores/checkout';
+import CheckoutInput from './CheckoutInput.vue';
 
 const checkoutStore = useCheckoutStore();
 
-// Use same address state
+const countryOptions = [
+  { value: 'ES', label: 'España' },
+  { value: 'MX', label: 'México' },
+  { value: 'AR', label: 'Argentina' },
+  { value: 'CO', label: 'Colombia' },
+  { value: 'CL', label: 'Chile' },
+  { value: 'PE', label: 'Perú' },
+  { value: 'VE', label: 'Venezuela' },
+  { value: 'US', label: 'Estados Unidos' },
+];
+
 const useSameAddress = ref(checkoutStore.useSameAddress);
 
-// Local address state
 const localAddress = reactive({
   fullName: checkoutStore.billingAddress.fullName,
   addressLine1: checkoutStore.billingAddress.addressLine1,
@@ -181,7 +129,6 @@ const localAddress = reactive({
   country: checkoutStore.billingAddress.country,
 });
 
-// Field-level errors
 const fieldErrors = reactive({
   fullName: '',
   addressLine1: '',
@@ -191,21 +138,16 @@ const fieldErrors = reactive({
   country: '',
 });
 
-/**
- * Handle same address toggle
- */
+const storeErrors = computed(() => checkoutStore.errors.billing_address || []);
+
 const handleSameAddressToggle = () => {
   checkoutStore.toggleSameAddress(useSameAddress.value);
-  
-  // If enabled, copy shipping address
+
   if (useSameAddress.value) {
     Object.assign(localAddress, checkoutStore.shippingAddress);
   }
 };
 
-/**
- * Validate individual field
- */
 const validateField = (fieldName) => {
   fieldErrors[fieldName] = '';
 
@@ -245,9 +187,6 @@ const validateField = (fieldName) => {
   }
 };
 
-/**
- * Watch for changes and update store (only when not using same address)
- */
 watch(localAddress, (newAddress) => {
   if (!useSameAddress.value) {
     checkoutStore.setBillingAddress(newAddress);
