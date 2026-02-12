@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import Home from './components/Home.vue';
+import HomePage from './Pages/HomePage.vue';
 import CartDrawer from './components/cart/CartDrawer.vue';
 import CartButton from './components/cart/CartButton.vue';
 import AddToCartButton from './components/cart/AddToCartButton.vue';
@@ -10,7 +10,7 @@ import CartToast from './components/cart/CartToast.vue';
 const pinia = createPinia();
 
 // Create and mount the Vue app for the home page
-const app = createApp(Home);
+const app = createApp(HomePage);
 
 // Use Pinia
 app.use(pinia);

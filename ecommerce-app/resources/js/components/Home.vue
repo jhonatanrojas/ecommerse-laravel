@@ -213,6 +213,8 @@
         :section="section"
       />
 
+      <HomeProductsSection @show-toast="showToast" />
+
       <!-- Static sections (always rendered after dynamic sections) -->
       <BenefitsSection />
       <NewsletterSection />
@@ -324,6 +326,7 @@ import HtmlBlockSection from './sections/HtmlBlockSection.vue';
 import BenefitsSection from './sections/BenefitsSection.vue';
 import NewsletterSection from './sections/NewsletterSection.vue';
 import TrustBadges from './sections/TrustBadges.vue';
+import HomeProductsSection from './home/HomeProductsSection.vue';
 import Navigation from '../Components/Navigation.vue';
 import { useCartStore } from '../stores/cart';
 import { useAuthStore } from '../stores/auth';
@@ -340,6 +343,7 @@ export default {
     BenefitsSection,
     NewsletterSection,
     TrustBadges,
+    HomeProductsSection,
     Navigation,
   },
   setup() {
