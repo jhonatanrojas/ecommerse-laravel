@@ -12,10 +12,16 @@ interface ProductServiceInterface
     public function getAllProducts(): Collection;
     
     public function getPaginatedProducts(int $perPage = 15, ?string $search = null, ?int $categoryId = null): LengthAwarePaginator;
+
+    public function getProducts(array $filters): LengthAwarePaginator;
     
     public function getProductById(int $id): ?Product;
     
     public function getProductByUuid(string $uuid): ?Product;
+
+    public function getProductBySlug(string $slug): Product;
+
+    public function getRelatedProducts(Product $product, int $limit = 8): Collection;
     
     public function createProduct(array $data, ?array $images = null): Product;
     

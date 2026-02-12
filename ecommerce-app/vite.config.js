@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/js/home-app.js',
                 'resources/js/auth-app.js',
                 'resources/js/checkout-app.js',
+                'resources/js/customer-app.js',
             ],
             refresh: true,
         }),

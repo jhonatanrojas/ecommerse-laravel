@@ -34,7 +34,7 @@ class AuthService
      */
     public function login(array $credentials): array
     {
-        if (! Auth::attempt($credentials)) {
+        if (! Auth::guard('customer')->attempt($credentials)) {
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales proporcionadas no son correctas.'],
             ]);

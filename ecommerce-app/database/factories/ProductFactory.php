@@ -4,6 +4,8 @@ namespace Database\Factories;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -21,7 +23,7 @@ class ProductFactory extends Factory
             'uuid' => (string) Str::uuid(),
             'category_id' => Category::inRandomOrder()->first()?->id,
             'name' => ucfirst($name),
-            'slug' => Str::slug($name),
+            'slug' => Str::slug($name) . '-' . fake()->unique()->numerify('#####'),
             'sku' => strtoupper(fake()->bothify('???-####')),
             'description' => fake()->paragraphs(3, true),
             'short_description' => fake()->sentence(15),
@@ -86,5 +88,33 @@ class ProductFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'category_id' => $categoryId,
         ]);
+    }
+
+    public function withImages(int $count = 2): static
+    {
+        return $this->afterCreating(function (Product $product) use ($count): void {
+            ProductImage::factory()->primary()->create([
+                'product_id' => $product->id,
+            ]);
+
+            if ($count > 1) {
+                ProductImage::factory()
+                    ->count($count - 1)
+                    ->sequence(fn ($sequence) => ['order' => $sequence->index + 1])
+                    ->create([
+                        'product_id' => $product->id,
+                        'is_primary' => false,
+                    ]);
+            }
+        });
+    }
+
+    public function withVariants(int $count = 1): static
+    {
+        return $this->afterCreating(function (Product $product) use ($count): void {
+            ProductVariant::factory()->count($count)->create([
+                'product_id' => $product->id,
+            ]);
+        });
     }
 }

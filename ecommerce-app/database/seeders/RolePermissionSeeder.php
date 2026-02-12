@@ -22,14 +22,16 @@ class RolePermissionSeeder extends Seeder
             'view reports',
         ];
 
+        $guard = 'admin';
+
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => $guard]);
         }
 
-        // Definir roles
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $managerRole = Role::firstOrCreate(['name' => 'manager']);
-        $customerRole = Role::firstOrCreate(['name' => 'customer']);
+        // Definir roles (solo guard admin; clientes no usan estos roles)
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => $guard]);
+        $managerRole = Role::firstOrCreate(['name' => 'manager', 'guard_name' => $guard]);
+        $customerRole = Role::firstOrCreate(['name' => 'customer', 'guard_name' => $guard]);
 
         // Asignar todos los permisos al rol admin
         $adminRole->syncPermissions(Permission::all());

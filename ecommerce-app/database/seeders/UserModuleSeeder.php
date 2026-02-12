@@ -22,12 +22,14 @@ class UserModuleSeeder extends Seeder
             'users.toggle-status',
         ];
 
+        $guard = 'admin';
+
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => $guard]);
         }
 
-        // Asignar permisos al rol admin si existe
-        $adminRole = Role::where('name', 'admin')->first();
+        // Asignar permisos al rol admin si existe (guard admin)
+        $adminRole = Role::where(['name' => 'admin', 'guard_name' => $guard])->first();
         
         if ($adminRole) {
             $adminRole->givePermissionTo($permissions);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\AddressType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cart\CheckoutRequest;
 use App\Http\Resources\OrderResource;
@@ -55,23 +56,23 @@ class CheckoutController extends Controller
         // Handle shipping address (ID or full address)
         $shippingAddressId = $request->validated('shipping_address_id');
         if (!$shippingAddressId && $request->has('shipping_address')) {
-            // Create new address from provided data (only if user is authenticated)
             if ($user) {
-                $shippingAddress = $user->addresses()->create($request->validated('shipping_address'));
+                $shippingAddress = $user->addresses()->create(
+                    $this->mapRequestAddressToModel($request->validated('shipping_address'), AddressType::Shipping)
+                );
                 $shippingAddressId = $shippingAddress->id;
             }
-            // For guest users, we'll pass the address data directly to the checkout service
         }
 
         // Handle billing address (ID or full address)
         $billingAddressId = $request->validated('billing_address_id');
         if (!$billingAddressId && $request->has('billing_address')) {
-            // Create new address from provided data (only if user is authenticated)
             if ($user) {
-                $billingAddress = $user->addresses()->create($request->validated('billing_address'));
+                $billingAddress = $user->addresses()->create(
+                    $this->mapRequestAddressToModel($request->validated('billing_address'), AddressType::Billing)
+                );
                 $billingAddressId = $billingAddress->id;
             }
-            // For guest users, we'll pass the address data directly to the checkout service
         }
 
         $checkoutData = new CheckoutData(
@@ -79,10 +80,7 @@ class CheckoutController extends Controller
             billingAddressId: $billingAddressId,
             paymentMethod: $request->validated('payment_method'),
             shippingMethod: $request->validated('shipping_method'),
-            customerNotes: $request->validated('notes'),
-            // Pass raw address data for guest users
-            shippingAddressData: !$shippingAddressId ? $request->validated('shipping_address') : null,
-            billingAddressData: !$billingAddressId ? $request->validated('billing_address') : null
+            customerNotes: $request->validated('notes')
         );
 
         $order = $this->cartService->checkout($cart, $checkoutData, $user, $sessionId);
@@ -92,5 +90,29 @@ class CheckoutController extends Controller
             'message' => 'Checkout completed successfully',
             'data' => new OrderResource($order),
         ], 201);
+    }
+
+    /**
+     * Map checkout request address (full_name, address_line_1, etc.) to Address model fields.
+     */
+    private function mapRequestAddressToModel(array $data, AddressType $type): array
+    {
+        $fullName = trim($data['full_name'] ?? '');
+        $parts = preg_split('/\s+/', $fullName, 2);
+        $firstName = $parts[0] ?? '';
+        $lastName = $parts[1] ?? $firstName;
+
+        return [
+            'type' => $type,
+            'first_name' => $firstName ?: 'N/A',
+            'last_name' => $lastName ?: 'N/A',
+            'address_line1' => $data['address_line_1'] ?? '',
+            'address_line2' => $data['address_line_2'] ?? null,
+            'city' => $data['city'] ?? '',
+            'state' => $data['state'] ?? null,
+            'postal_code' => $data['postal_code'] ?? '',
+            'country' => $data['country'] ?? '',
+            'is_default' => false,
+        ];
     }
 }

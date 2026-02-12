@@ -22,13 +22,11 @@ class ProductController extends Controller
     {
         $this->authorize('viewAny', Product::class);
 
-        $filters = [
-            'active' => $request->boolean('active'),
-            'search' => $request->get('search'),
-            'per_page' => $request->get('per_page', 15),
-        ];
+        $perPage = (int) $request->get('per_page', 15);
+        $search = $request->get('search');
+        $categoryId = $request->get('category_id') ? (int) $request->get('category_id') : null;
 
-        $products = $this->productService->getAll($filters);
+        $products = $this->productService->getPaginatedProducts($perPage, $search, $categoryId);
 
         return response()->json($products);
     }
@@ -38,7 +36,9 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request): JsonResponse
     {
-        $product = $this->productService->create($request->validated());
+        $this->authorize('create', Product::class);
+
+        $product = $this->productService->createProduct($request->validated());
 
         return response()->json($product, 201);
     }
@@ -58,9 +58,11 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
-        $product = $this->productService->update($product, $request->validated());
+        $this->authorize('update', $product);
 
-        return response()->json($product);
+        $this->productService->updateProduct($product->id, $request->validated());
+
+        return response()->json($product->fresh());
     }
 
     /**
@@ -70,7 +72,7 @@ class ProductController extends Controller
     {
         $this->authorize('delete', $product);
 
-        $this->productService->delete($product);
+        $this->productService->deleteProduct($product->id);
 
         return response()->json(null, 204);
     }

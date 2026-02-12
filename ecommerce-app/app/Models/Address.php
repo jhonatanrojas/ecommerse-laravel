@@ -36,6 +36,16 @@ class Address extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     /**
+     * Get the columns that should receive a unique identifier.
+     *
+     * @return array<int, string>
+     */
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>

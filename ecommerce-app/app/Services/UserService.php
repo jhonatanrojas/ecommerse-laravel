@@ -7,6 +7,7 @@ use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\Contracts\UserServiceInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class UserService implements UserServiceInterface
@@ -155,5 +156,45 @@ class UserService implements UserServiceInterface
             Log::error('Error assigning permissions: ' . $e->getMessage());
             throw $e;
         }
+    }
+
+    /**
+     * Update user password with current password validation.
+     *
+     * @param User $user The user whose password will be updated
+     * @param string $currentPassword The current password for validation
+     * @param string $newPassword The new password to set
+     * @return bool True if password was updated successfully
+     * @throws \Exception If current password is invalid or update fails
+     */
+    public function updatePassword(User $user, string $currentPassword, string $newPassword): bool
+    {
+        try {
+            // Validate current password
+            if (!$this->validateCurrentPassword($user, $currentPassword)) {
+                throw new \Exception('La contraseña actual es incorrecta.');
+            }
+
+            // Update password
+            $user->password = Hash::make($newPassword);
+            $user->save();
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error updating password: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Validate the current password for a user.
+     *
+     * @param User $user The user to validate password for
+     * @param string $password The password to validate
+     * @return bool True if password is valid
+     */
+    private function validateCurrentPassword(User $user, string $password): bool
+    {
+        return Hash::check($password, $user->password);
     }
 }

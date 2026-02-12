@@ -31,7 +31,7 @@ class CartAuthorizationTest extends TestCase
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
         $cart = Cart::factory()->create(['user_id' => $user1->id]);
-        $product = Product::factory()->create(['price' => 100.00, 'stock' => 10]);
+        $product = Product::factory()->active()->create(['price' => 100.00, 'stock' => 10]);
 
         // Act & Assert
         $this->expectException(UnauthorizedCartAccessException::class);
@@ -46,7 +46,7 @@ class CartAuthorizationTest extends TestCase
             'user_id' => null,
             'session_id' => 'session-123',
         ]);
-        $product = Product::factory()->create(['price' => 100.00, 'stock' => 10]);
+        $product = Product::factory()->active()->create(['price' => 100.00, 'stock' => 10]);
 
         // Act & Assert
         $this->expectException(UnauthorizedCartAccessException::class);
@@ -59,7 +59,7 @@ class CartAuthorizationTest extends TestCase
         // Arrange
         $user = User::factory()->create();
         $cart = Cart::factory()->create(['user_id' => $user->id]);
-        $product = Product::factory()->create(['price' => 100.00, 'stock' => 10]);
+        $product = Product::factory()->active()->create(['price' => 100.00, 'stock' => 10]);
 
         // Act
         $cartItem = $this->cartService->addItem($cart, $product->id, null, 1, $user, null);
@@ -78,7 +78,7 @@ class CartAuthorizationTest extends TestCase
             'user_id' => null,
             'session_id' => $sessionId,
         ]);
-        $product = Product::factory()->create(['price' => 100.00, 'stock' => 10]);
+        $product = Product::factory()->active()->create(['price' => 100.00, 'stock' => 10]);
 
         // Act
         $cartItem = $this->cartService->addItem($cart, $product->id, null, 1, null, $sessionId);
@@ -95,7 +95,7 @@ class CartAuthorizationTest extends TestCase
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
         $cart = Cart::factory()->create(['user_id' => $user1->id]);
-        $product = Product::factory()->create(['price' => 100.00, 'stock' => 10]);
+        $product = Product::factory()->active()->create(['price' => 100.00, 'stock' => 10]);
         $cartItem = CartItem::factory()->create([
             'cart_id' => $cart->id,
             'product_id' => $product->id,
@@ -115,7 +115,7 @@ class CartAuthorizationTest extends TestCase
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
         $cart = Cart::factory()->create(['user_id' => $user1->id]);
-        $product = Product::factory()->create(['price' => 100.00, 'stock' => 10]);
+        $product = Product::factory()->active()->create(['price' => 100.00, 'stock' => 10]);
         $cartItem = CartItem::factory()->create([
             'cart_id' => $cart->id,
             'product_id' => $product->id,
@@ -174,7 +174,7 @@ class CartAuthorizationTest extends TestCase
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
         $cart = Cart::factory()->create(['user_id' => $user1->id]);
-        $product = Product::factory()->create(['price' => 100.00, 'stock' => 10]);
+        $product = Product::factory()->active()->create(['price' => 100.00, 'stock' => 10]);
         CartItem::factory()->create([
             'cart_id' => $cart->id,
             'product_id' => $product->id,

@@ -5,16 +5,26 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * OrderItemResource formats order item data for API responses.
+ * 
+ * Transforms order item model data into a consistent JSON structure
+ * including product information, quantity, pricing, and totals.
+ */
 class OrderItemResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
+     *
+     * Returns order item data including product details, quantity,
+     * price, subtotal, tax, and total amounts.
      *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'uuid' => $this->uuid,
             'product_id' => $this->product_id,
             'product_variant_id' => $this->product_variant_id,

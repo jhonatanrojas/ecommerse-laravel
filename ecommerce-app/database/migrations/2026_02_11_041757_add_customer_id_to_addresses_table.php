@@ -29,9 +29,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('addresses', function (Blueprint $table) {
-            $table->dropForeign(['customer_id']);
-            $table->dropIndex(['customer_id']);
+        $driver = Schema::getConnection()->getDriverName();
+
+        Schema::table('addresses', function (Blueprint $table) use ($driver) {
+            if ($driver !== 'sqlite') {
+                $table->dropForeign(['customer_id']);
+                $table->dropIndex(['customer_id']);
+            }
             $table->dropColumn('customer_id');
         });
     }

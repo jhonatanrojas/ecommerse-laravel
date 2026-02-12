@@ -24,14 +24,15 @@ Route::get('/checkout', function () {
 })->name('checkout');
 
 Route::get('/order-success/{orderId?}', function ($orderId = null) {
-    return view('checkout');
+    return view('order-success');
 })->name('order.success');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Customer Dashboard (guard customer; opcional: verified)
+Route::get('/customer', function () {
+    return view('customer.dashboard');
+})->middleware(['auth:customer', 'verified'])->name('customer.dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:customer')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

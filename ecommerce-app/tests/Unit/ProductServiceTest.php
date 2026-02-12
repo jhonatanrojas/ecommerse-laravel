@@ -2,15 +2,18 @@
 
 namespace Tests\Unit;
 
+use App\Models\Category;
 use App\Models\Product;
-use App\Repositories\Contracts\ProductRepositoryInterface;
+use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use App\Services\ProductService;
-use Mockery;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ProductServiceTest extends TestCase
 {
-    protected ProductRepositoryInterface $repository;
+    use RefreshDatabase;
 
     protected ProductService $service;
 
@@ -18,97 +21,95 @@ class ProductServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->repository = Mockery::mock(ProductRepositoryInterface::class);
-        $this->app->instance(ProductRepositoryInterface::class, $this->repository);
         $this->service = $this->app->make(ProductService::class);
     }
 
-    protected function tearDown(): void
+    public function test_get_products_applies_filters_and_returns_paginated_result(): void
     {
-        Mockery::close();
+        $categoryOne = Category::factory()->active()->create();
+        $categoryTwo = Category::factory()->active()->create();
 
-        parent::tearDown();
+        Product::factory()->active()->create([
+            'name' => 'Laptop Pro',
+            'slug' => 'laptop-pro',
+            'category_id' => $categoryOne->id,
+            'price' => 1200,
+        ]);
+        Product::factory()->active()->create([
+            'name' => 'Laptop Basic',
+            'slug' => 'laptop-basic',
+            'category_id' => $categoryOne->id,
+            'price' => 650,
+        ]);
+        Product::factory()->active()->create([
+            'name' => 'Phone Max',
+            'slug' => 'phone-max',
+            'category_id' => $categoryTwo->id,
+            'price' => 450,
+        ]);
+
+        $result = $this->service->getProducts([
+            'search' => 'Laptop',
+            'category_id' => $categoryOne->id,
+            'min_price' => 600,
+            'max_price' => 1300,
+            'sort' => 'price_desc',
+            'per_page' => 10,
+            'page' => 1,
+        ]);
+
+        $items = $result->items();
+
+        $this->assertCount(2, $items);
+        $this->assertSame('laptop-pro', $items[0]->slug);
+        $this->assertSame('laptop-basic', $items[1]->slug);
+        $this->assertTrue($items[0]->relationLoaded('category'));
+        $this->assertTrue($items[0]->relationLoaded('images'));
+        $this->assertTrue($items[0]->relationLoaded('variants'));
     }
 
-    public function test_get_all_returns_products_from_repository(): void
+    public function test_get_product_by_slug_returns_product_with_required_relationships(): void
     {
-        $products = Product::factory()->count(3)->make();
+        $category = Category::factory()->active()->create();
+        $product = Product::factory()->active()->withCategory($category->id)->create([
+            'slug' => 'ultra-monitor',
+        ]);
+        ProductImage::factory()->primary()->create(['product_id' => $product->id]);
+        ProductVariant::factory()->create(['product_id' => $product->id]);
 
-        $this->repository
-            ->shouldReceive('all')
-            ->once()
-            ->with([])
-            ->andReturn($products);
+        $result = $this->service->getProductBySlug('ultra-monitor');
 
-        $result = $this->service->getAll();
-
-        $this->assertCount(3, $result);
+        $this->assertSame($product->id, $result->id);
+        $this->assertTrue($result->relationLoaded('category'));
+        $this->assertTrue($result->relationLoaded('images'));
+        $this->assertTrue($result->relationLoaded('variants'));
     }
 
-    public function test_find_returns_product_from_repository(): void
+    public function test_get_product_by_slug_throws_exception_when_not_found(): void
     {
-        $product = Product::factory()->make(['id' => 1]);
+        $this->expectException(ModelNotFoundException::class);
 
-        $this->repository
-            ->shouldReceive('find')
-            ->once()
-            ->with(1)
-            ->andReturn($product);
-
-        $result = $this->service->find(1);
-
-        $this->assertSame($product, $result);
+        $this->service->getProductBySlug('slug-que-no-existe');
     }
 
-    public function test_create_delegates_to_repository(): void
+    public function test_get_related_products_returns_same_category_without_current_product(): void
     {
-        $data = [
-            'name' => 'Test Product',
-            'price' => 29.99,
-            'stock' => 10,
-        ];
-        $product = Product::factory()->make($data);
+        $category = Category::factory()->active()->create();
+        $otherCategory = Category::factory()->active()->create();
 
-        $this->repository
-            ->shouldReceive('create')
-            ->once()
-            ->with($data)
-            ->andReturn($product);
+        $target = Product::factory()->active()->withCategory($category->id)->create([
+            'slug' => 'target-related',
+        ]);
+        Product::factory()->active()->withCategory($category->id)->count(4)->create();
+        Product::factory()->active()->withCategory($otherCategory->id)->count(2)->create();
 
-        $result = $this->service->create($data);
+        $related = $this->service->getRelatedProducts($target, 3);
 
-        $this->assertSame($product, $result);
-    }
-
-    public function test_update_delegates_to_repository(): void
-    {
-        $product = Product::factory()->make(['id' => 1]);
-        $data = ['name' => 'Updated Name'];
-        $updatedProduct = (clone $product)->fill($data);
-
-        $this->repository
-            ->shouldReceive('update')
-            ->once()
-            ->with(Mockery::type(Product::class), $data)
-            ->andReturn($updatedProduct);
-
-        $result = $this->service->update($product, $data);
-
-        $this->assertEquals('Updated Name', $result->name);
-    }
-
-    public function test_delete_delegates_to_repository(): void
-    {
-        $product = Product::factory()->make(['id' => 1]);
-
-        $this->repository
-            ->shouldReceive('delete')
-            ->once()
-            ->with(Mockery::type(Product::class))
-            ->andReturn(true);
-
-        $result = $this->service->delete($product);
-
-        $this->assertTrue($result);
+        $this->assertCount(3, $related);
+        $this->assertFalse($related->pluck('id')->contains($target->id));
+        $this->assertTrue($related->every(fn (Product $item): bool => $item->category_id === $category->id));
+        $this->assertTrue($related->every(fn (Product $item): bool => $item->relationLoaded('category')));
+        $this->assertTrue($related->every(fn (Product $item): bool => $item->relationLoaded('images')));
+        $this->assertTrue($related->every(fn (Product $item): bool => $item->relationLoaded('variants')));
     }
 }

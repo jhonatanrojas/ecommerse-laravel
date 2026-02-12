@@ -123,18 +123,19 @@ const notes = computed({
 });
 
 /**
- * Load cart and store config on mount
+ * Load cart and store config on mount.
+ * Antes de redirigir a login, verificamos la sesión en el servidor (checkAuth) para evitar
+ * bucles: si el usuario tiene sesión pero localStorage está desincronizado, no redirigir.
  */
 onMounted(async () => {
+  const authStore = useAuthStore();
+  await authStore.checkAuth();
+
   await checkoutStore.loadStoreConfig();
   await checkoutStore.loadCart();
-  
-  // If guest checkout is not allowed and user is not authenticated, redirect to login
-  if (!checkoutStore.allowGuestCheckout && !checkoutStore.isEmpty) {
-    const authStore = useAuthStore();
-    if (!authStore.isAuthenticated) {
-      window.location.href = '/login?redirect=/checkout';
-    }
+
+  if (!checkoutStore.allowGuestCheckout && !checkoutStore.isEmpty && !authStore.isAuthenticated) {
+    window.location.href = '/login?redirect=/checkout';
   }
 });
 

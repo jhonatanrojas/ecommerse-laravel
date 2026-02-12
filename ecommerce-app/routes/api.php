@@ -3,8 +3,9 @@
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\ProductController as PublicProductController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductController as ManageProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,14 +15,28 @@ Route::post('register', [AuthController::class , 'register']);
 Route::post('login', [AuthController::class , 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-            return $request->user();
-        }
-        );
-        Route::post('logout', [AuthController::class , 'logout']);    });
+    Route::post('logout', [AuthController::class , 'logout']);
 
-Route::get('products', [ProductController::class , 'index']);
-Route::get('products/{product}', [ProductController::class , 'show']);
+    // Customer Backend API Routes - User profile and password
+    Route::get('/user', [\App\Http\Controllers\Api\UserController::class, 'show']);
+    Route::put('/user/password', [\App\Http\Controllers\Api\UserController::class, 'updatePassword']);
+
+    Route::prefix('customer')->group(function () {
+        // Customer Orders
+        Route::get('/orders', [\App\Http\Controllers\Api\CustomerOrderController::class, 'index']);
+
+        // Customer Addresses
+        Route::get('/addresses', [\App\Http\Controllers\Api\CustomerAddressController::class, 'index']);
+        Route::post('/addresses', [\App\Http\Controllers\Api\CustomerAddressController::class, 'store']);
+        Route::put('/addresses/{uuid}', [\App\Http\Controllers\Api\CustomerAddressController::class, 'update']);
+        Route::delete('/addresses/{uuid}', [\App\Http\Controllers\Api\CustomerAddressController::class, 'destroy']);
+        Route::put('/default-address', [\App\Http\Controllers\Api\CustomerAddressController::class, 'setDefaultAddress']);
+    });
+});
+
+Route::get('products', [PublicProductController::class, 'index']);
+Route::get('products/{slug}/related', [PublicProductController::class, 'related']);
+Route::get('products/{slug}', [PublicProductController::class, 'show']);
 
 // Home Configuration (Public API)
 Route::get('home-configuration', [\App\Http\Controllers\Api\HomeConfigurationController::class , 'index']);
@@ -30,9 +45,9 @@ Route::get('home-configuration', [\App\Http\Controllers\Api\HomeConfigurationCon
 Route::get('store-config', [\App\Http\Controllers\Api\StoreConfigController::class, 'index']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('products', [ProductController::class , 'store']);
-    Route::put('products/{product}', [ProductController::class , 'update']);
-    Route::delete('products/{product}', [ProductController::class , 'destroy']);
+    Route::post('products', [ManageProductController::class , 'store']);
+    Route::put('products/{product}', [ManageProductController::class , 'update']);
+    Route::delete('products/{product}', [ManageProductController::class , 'destroy']);
 });
 
 // Menus Public API
@@ -56,4 +71,3 @@ Route::prefix('cart')->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store'])
         ->name('cart.checkout');
 });
-

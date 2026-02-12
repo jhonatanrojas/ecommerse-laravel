@@ -2,6 +2,15 @@
 
 return [
 
+    /*
+    |--------------------------------------------------------------------------
+    | Default Guard (Spatie)
+    |--------------------------------------------------------------------------
+    | Los roles y permisos se usan solo para el guard 'admin'. El modelo User
+    | sobrescribe getDefaultGuardName() para devolver 'admin'. Así el panel
+    | admin usa Spatie; los clientes no tienen roles de este guard.
+    */
+
     'models' => [
 
         /*

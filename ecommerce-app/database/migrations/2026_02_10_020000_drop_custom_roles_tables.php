@@ -11,18 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $driver = Schema::getConnection()->getDriverName();
+
         // Primero eliminar la tabla pivot que referencia a roles y users
         if (Schema::hasTable('role_user')) {
-            Schema::table('role_user', function (Blueprint $table) {
-                // Eliminar las foreign keys si existen antes de dropear la tabla
-                if (Schema::hasColumn('role_user', 'user_id')) {
-                    $table->dropForeign(['user_id']);
-                }
-
-                if (Schema::hasColumn('role_user', 'role_id')) {
-                    $table->dropForeign(['role_id']);
-                }
-            });
+            // SQLite no soporta dropForeign; solo dropear la tabla directamente
+            if ($driver !== 'sqlite') {
+                Schema::table('role_user', function (Blueprint $table) {
+                    if (Schema::hasColumn('role_user', 'user_id')) {
+                        $table->dropForeign(['user_id']);
+                    }
+                    if (Schema::hasColumn('role_user', 'role_id')) {
+                        $table->dropForeign(['role_id']);
+                    }
+                });
+            }
 
             Schema::dropIfExists('role_user');
         }

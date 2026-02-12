@@ -55,8 +55,65 @@
               </svg>
             </button>
 
-            <!-- Account -->
-            <a href="/login" class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Mi cuenta">
+            <!-- Account - Desktop with dropdown when authenticated -->
+            <div v-if="authStore.isAuthenticated" class="hidden sm:block relative">
+              <button 
+                @click="showUserMenu = !showUserMenu"
+                class="flex items-center gap-2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Mi cuenta"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <span class="text-sm font-medium hidden lg:inline">{{ authStore.user?.name?.split(' ')[0] || 'Usuario' }}</span>
+                <svg class="w-4 h-4 hidden lg:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              
+              <!-- Dropdown Menu -->
+              <transition
+                enter-active-class="transition ease-out duration-100"
+                enter-from-class="transform opacity-0 scale-95"
+                enter-to-class="transform opacity-100 scale-100"
+                leave-active-class="transition ease-in duration-75"
+                leave-from-class="transform opacity-100 scale-100"
+                leave-to-class="transform opacity-0 scale-95"
+              >
+                <div 
+                  v-if="showUserMenu"
+                  v-click-outside="() => showUserMenu = false"
+                  class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+                >
+                  <div class="px-4 py-3 border-b border-gray-100">
+                    <p class="text-sm font-semibold text-gray-900">{{ authStore.user?.name }}</p>
+                    <p class="text-xs text-gray-500 truncate">{{ authStore.user?.email }}</p>
+                  </div>
+                  <a href="/customer" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    Mi Cuenta
+                  </a>
+                  <button @click="handleLogout" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    Cerrar Sesión
+                  </button>
+                </div>
+              </transition>
+            </div>
+
+            <!-- Account - Simple link when not authenticated -->
+            <a v-else :href="accountUrl" class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Mi cuenta">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </a>
+
+            <!-- Account - Mobile (always simple link) -->
+            <a :href="accountUrl" class="sm:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Mi cuenta">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
               </svg>
@@ -113,7 +170,7 @@
           <div v-if="mobileMenuOpen" class="lg:hidden border-t border-gray-100 py-4 max-h-[70vh] overflow-y-auto">
             <Navigation location="header" variant="mobile" />
             <div class="mt-4 pt-4 border-t border-gray-100 space-y-2">
-              <a href="/login" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
+              <a :href="accountUrl" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
@@ -257,7 +314,7 @@
 </template>
 
 <script>
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import HeroSection from './sections/HeroSection.vue';
 import FeaturedProductsSection from './sections/FeaturedProductsSection.vue';
 import FeaturedCategoriesSection from './sections/FeaturedCategoriesSection.vue';
@@ -269,6 +326,7 @@ import NewsletterSection from './sections/NewsletterSection.vue';
 import TrustBadges from './sections/TrustBadges.vue';
 import Navigation from '../Components/Navigation.vue';
 import { useCartStore } from '../stores/cart';
+import { useAuthStore } from '../stores/auth';
 
 export default {
   name: 'Home',
@@ -286,14 +344,24 @@ export default {
   },
   setup() {
     const cartStore = useCartStore();
+    const authStore = useAuthStore();
 
     onMounted(() => {
       // Initialize cart on mount
       cartStore.fetchCart();
+      // Check authentication status
+      authStore.checkAuth();
+    });
+
+    // Computed property for user account URL
+    const accountUrl = computed(() => {
+      return authStore.isAuthenticated ? '/customer' : '/login';
     });
 
     return {
       cartStore,
+      authStore,
+      accountUrl,
     };
   },
   data() {
@@ -308,6 +376,7 @@ export default {
       showPromoBar: true,
       scrolled: false,
       currentYear: new Date().getFullYear(),
+      showUserMenu: false,
       toast: {
         show: false,
         type: 'info',
@@ -365,6 +434,29 @@ export default {
         title,
         message,
       };
+    },
+    async handleLogout() {
+      const result = await this.authStore.logout();
+      if (result.success) {
+        window.location.href = '/';
+      } else {
+        this.showToast('error', 'No se pudo cerrar sesión. Intenta de nuevo.', 'Error');
+      }
+    },
+  },
+  directives: {
+    clickOutside: {
+      mounted(el, binding) {
+        el.clickOutsideEvent = (event) => {
+          if (!(el === event.target || el.contains(event.target))) {
+            binding.value();
+          }
+        };
+        document.addEventListener('click', el.clickOutsideEvent);
+      },
+      unmounted(el) {
+        document.removeEventListener('click', el.clickOutsideEvent);
+      },
     },
   },
 };

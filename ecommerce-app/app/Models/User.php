@@ -37,6 +37,20 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, HasUuids, SoftDeletes, HasAuditFields, HasRoles;
 
     /**
+     * Guard usado por Spatie Permission. Solo usuarios administradores tienen
+     * roles/permisos con este guard; los clientes no usan roles.
+     */
+    protected string $guard_name = 'admin';
+
+    /**
+     * Para Spatie: roles y permisos se asignan siempre al guard 'admin'.
+     */
+    public function getDefaultGuardName(): string
+    {
+        return 'admin';
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>

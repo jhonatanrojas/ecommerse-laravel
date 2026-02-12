@@ -11,7 +11,7 @@
                         <path d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 5.25A.75.75 0 0 1 2.75 9h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 9.75Zm0 5.25A.75.75 0 0 1 2.75 14h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 14.75Z"/>
                     </svg>
                 </button>
-                <a href="{{ route('dashboard') }}" class="flex ms-2 md:me-24 items-center">
+                <a href="{{ route('admin.dashboard') }}" class="flex ms-2 md:me-24 items-center">
                     <x-application-logo class="h-8 w-auto text-primary-600" />
                     <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white ms-2">
                         {{ config('app.name', 'Ecommerce') }} Admin
@@ -40,12 +40,7 @@
                         </div>
                         <ul class="py-1" role="none">
                             <li>
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">
-                                    Perfil
-                                </a>
-                            </li>
-                            <li>
-                                <form method="POST" action="{{ route('logout') }}">
+                                <form method="POST" action="{{ route('admin.logout') }}">
                                     @csrf
                                     <button type="submit" class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
                                         Cerrar sesión

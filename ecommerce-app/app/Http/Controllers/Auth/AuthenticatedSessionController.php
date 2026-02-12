@@ -29,15 +29,21 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Respetar redirect (query o body) para volver a /checkout u otra URL tras login
+        $redirectTo = $request->query('redirect') ?? $request->input('redirect');
+        if ($redirectTo && \Illuminate\Support\Str::startsWith($redirectTo, '/') && ! \Illuminate\Support\Str::startsWith($redirectTo, '//')) {
+            return redirect($redirectTo);
+        }
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
     /**
-     * Destroy an authenticated session.
+     * Destroy an authenticated session (guard customer).
      */
     public function destroy(Request $request): RedirectResponse
     {
-        Auth::guard('web')->logout();
+        Auth::guard('customer')->logout();
 
         $request->session()->invalidate();
 
