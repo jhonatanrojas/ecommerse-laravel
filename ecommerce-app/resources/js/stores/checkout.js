@@ -52,6 +52,7 @@ export const useCheckoutStore = defineStore('checkout', {
     
     // Order result
     order: null,
+    payment: null,
     
     // Available methods (can be fetched from API or hardcoded)
     availableShippingMethods: [
@@ -79,9 +80,9 @@ export const useCheckoutStore = defineStore('checkout', {
     ],
     availablePaymentMethods: [
       {
-        id: 'credit_card',
-        name: 'Tarjeta de Crédito/Débito',
-        description: 'Pago seguro con tarjeta',
+        id: 'stripe',
+        name: 'Stripe (Tarjeta)',
+        description: 'Pago seguro con tarjeta vía Stripe',
         icon: 'credit-card',
       },
       {
@@ -91,15 +92,15 @@ export const useCheckoutStore = defineStore('checkout', {
         icon: 'paypal',
       },
       {
-        id: 'bank_transfer',
-        name: 'Transferencia Bancaria',
-        description: 'Transferencia directa',
-        icon: 'bank',
+        id: 'mercadopago',
+        name: 'Mercado Pago',
+        description: 'Pago online con Mercado Pago',
+        icon: 'wallet',
       },
       {
-        id: 'cash_on_delivery',
-        name: 'Pago contra entrega',
-        description: 'Paga al recibir tu pedido',
+        id: 'cash',
+        name: 'Pago en Efectivo',
+        description: 'Pago en efectivo al recibir',
         icon: 'cash',
       },
     ],
@@ -200,6 +201,11 @@ export const useCheckoutStore = defineStore('checkout', {
         const response = await checkoutService.getStoreConfig();
         const data = response.data || response;
         this.storeConfig = data;
+
+        if (Array.isArray(data?.payment_methods) && data.payment_methods.length > 0) {
+          this.availablePaymentMethods = data.payment_methods;
+        }
+
         return { success: true };
       } catch (error) {
         console.error('Error loading store config:', error);
@@ -497,17 +503,34 @@ export const useCheckoutStore = defineStore('checkout', {
           notes: this.notes || '',
         };
 
-        // Submit to API
-        const response = await checkoutService.submitCheckout(payload);
-        const data = response.data || response;
-        
-        // Store order result
-        this.order = data;
-        
-        // Show success notification
-        toast.success('¡Pedido realizado!', 'Tu pedido ha sido procesado exitosamente');
-        
-        return { success: true, order: data };
+        // Step 1: Create order through checkout API
+        const checkoutResponse = await checkoutService.submitCheckout(payload);
+        const orderData = checkoutResponse.data || checkoutResponse;
+        this.order = orderData;
+
+        // Step 2: Process payment for created order
+        const paymentResponse = await checkoutService.createPayment({
+          order_id: orderData.uuid || orderData.id,
+          payment_method: this.paymentMethod.id,
+          amount: Number(orderData.total || this.totalAmount),
+        });
+
+        const paymentData = paymentResponse.data || paymentResponse;
+        this.payment = paymentData;
+
+        if (paymentData.status === 'completed') {
+          toast.success('¡Pago completado!', 'Tu pedido fue pagado correctamente');
+          return { success: true, order: orderData, payment: paymentData, paymentStatus: paymentData.status };
+        }
+
+        if (paymentData.status === 'pending') {
+          toast.warning('Pago en proceso', 'Tu pago está pendiente de confirmación');
+          return { success: true, order: orderData, payment: paymentData, paymentStatus: paymentData.status };
+        }
+
+        this.errors.general = ['El pago no pudo procesarse. Intenta nuevamente desde tus órdenes.'];
+        toast.error('Pago fallido', 'El pedido fue creado, pero el pago falló');
+        return { success: false, order: orderData, payment: paymentData, paymentStatus: paymentData.status };
       } catch (error) {
         // Handle validation errors
         if (error.validationErrors) {
@@ -526,6 +549,26 @@ export const useCheckoutStore = defineStore('checkout', {
         };
       } finally {
         this.submitting = false;
+      }
+    },
+
+    /**
+     * Refresh payment status by UUID
+     * @param {string} paymentUuid
+     */
+    async refreshPaymentStatus(paymentUuid) {
+      if (!paymentUuid) {
+        return { success: false, error: 'payment_uuid_missing' };
+      }
+
+      try {
+        const response = await checkoutService.getPayment(paymentUuid);
+        const data = response.data || response;
+        this.payment = data;
+        return { success: true, payment: data };
+      } catch (error) {
+        const message = error.response?.data?.message || 'No se pudo consultar el estado del pago';
+        return { success: false, error: message };
       }
     },
 
@@ -568,6 +611,7 @@ export const useCheckoutStore = defineStore('checkout', {
       this.submitting = false;
       this.errors = {};
       this.order = null;
+      this.payment = null;
     },
   },
 });

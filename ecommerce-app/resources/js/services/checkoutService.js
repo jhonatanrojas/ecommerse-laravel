@@ -35,6 +35,37 @@ export const checkoutService = {
   },
 
   /**
+   * Create and process payment for an order
+   * @param {Object} payload - Payment data
+   * @returns {Promise} Payment response
+   */
+  async createPayment(payload) {
+    const response = await api.post('/payments', payload);
+    return response.data;
+  },
+
+  /**
+   * Get payment status/details
+   * @param {string} uuid - Payment UUID
+   * @returns {Promise} Payment response
+   */
+  async getPayment(uuid) {
+    const response = await api.get(`/payments/${uuid}`);
+    return response.data;
+  },
+
+  /**
+   * Refund payment
+   * @param {string} uuid - Payment UUID
+   * @param {Object} payload - Refund payload { amount }
+   * @returns {Promise} Payment response
+   */
+  async refundPayment(uuid, payload) {
+    const response = await api.post(`/payments/${uuid}/refund`, payload);
+    return response.data;
+  },
+
+  /**
    * Add item to cart
    * @param {Object} data - Item data
    * @returns {Promise} Updated cart

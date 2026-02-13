@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\PaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class CreatePaymentRequest extends FormRequest
 {
@@ -19,9 +19,21 @@ class CreatePaymentRequest extends FormRequest
     {
         return [
             'order_id' => ['required', 'string', 'max:64'],
-            'payment_method' => ['required', 'string', Rule::in(config('payments.methods', []))],
+            'payment_method' => [
+                'required',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $exists = PaymentMethod::query()
+                        ->where('slug', (string) $value)
+                        ->where('is_active', true)
+                        ->exists();
+
+                    if (!$exists) {
+                        $fail('El método de pago no está disponible.');
+                    }
+                },
+            ],
             'amount' => ['required', 'numeric', 'min:0.01'],
         ];
     }
 }
-

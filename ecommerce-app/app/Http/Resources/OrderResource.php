@@ -51,6 +51,21 @@ class OrderResource extends JsonResource
             'shippingAddress' => new AddressResource($this->whenLoaded('shippingAddress')), // Alias for compatibility
             'billing_address' => new AddressResource($this->whenLoaded('billingAddress')),
             'billingAddress' => new AddressResource($this->whenLoaded('billingAddress')), // Alias for compatibility
+            'payments' => $this->whenLoaded('payments', function () {
+                return $this->payments->map(function ($payment) {
+                    return [
+                        'uuid' => $payment->uuid,
+                        'payment_method' => $payment->payment_method,
+                        'transaction_id' => $payment->transaction_id,
+                        'amount' => (float) $payment->amount,
+                        'currency' => $payment->currency,
+                        'status' => $payment->status->value,
+                        'payment_date' => $payment->payment_date?->toIso8601String(),
+                        'refund_date' => $payment->refund_date?->toIso8601String(),
+                        'refund_amount' => $payment->refund_amount !== null ? (float) $payment->refund_amount : null,
+                    ];
+                })->values();
+            }),
         ];
     }
 }

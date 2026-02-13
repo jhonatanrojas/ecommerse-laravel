@@ -34,6 +34,29 @@
 
       <!-- Success Content -->
       <div v-else-if="order" class="max-w-5xl mx-auto space-y-6">
+        <div
+          v-if="paymentStatus"
+          class="rounded-2xl border px-5 py-4 shadow-sm"
+          :class="paymentStatusCardClass"
+        >
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.16em]" :class="paymentStatusTextClass">Estado del pago</p>
+              <p class="mt-1 text-base font-bold" :class="paymentStatusTextClass">{{ paymentStatusLabel }}</p>
+              <p class="mt-1 text-sm text-gray-700">{{ paymentStatusMessage }}</p>
+            </div>
+            <button
+              v-if="paymentUuid"
+              type="button"
+              class="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              :disabled="paymentRefreshLoading"
+              @click="refreshPaymentStatus"
+            >
+              {{ paymentRefreshLoading ? 'Actualizando...' : 'Actualizar estado' }}
+            </button>
+          </div>
+        </div>
+
         <!-- Success Header -->
         <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl border border-green-100 p-8 md:p-12 text-center shadow-sm">
           <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/30">
@@ -303,8 +326,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onBeforeUnmount, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import api from '../services/api';
 import { useCheckoutStore } from '../stores/checkout';
 
 const route = useRoute();
@@ -312,7 +336,10 @@ const checkoutStore = useCheckoutStore();
 
 // State
 const loading = ref(false);
+const paymentRefreshLoading = ref(false);
+let paymentPollInterval = null;
 const order = computed(() => checkoutStore.order);
+const payment = computed(() => checkoutStore.payment);
 const currentYear = new Date().getFullYear();
 
 // Order data
@@ -320,6 +347,60 @@ const orderItems = computed(() => order.value?.items || []);
 const shippingAddress = computed(() => order.value?.shippingAddress || order.value?.shipping_address || {});
 const shippingMethod = computed(() => order.value?.shippingMethod || order.value?.shipping_method || {});
 const paymentMethod = computed(() => order.value?.paymentMethod || order.value?.payment_method || {});
+const paymentUuid = computed(() => route.query.paymentUuid || payment.value?.uuid || null);
+const paymentStatus = computed(() => payment.value?.status || null);
+
+const paymentStatusLabel = computed(() => {
+  const labels = {
+    completed: 'Pagado',
+    pending: 'Pendiente de confirmación',
+    failed: 'Pago fallido',
+    refunded: 'Reembolsado',
+    partially_refunded: 'Reembolso parcial',
+  };
+
+  return labels[paymentStatus.value] || 'Sin estado';
+});
+
+const paymentStatusMessage = computed(() => {
+  if (paymentStatus.value === 'completed') {
+    return 'El pago se confirmó correctamente.';
+  }
+
+  if (paymentStatus.value === 'pending') {
+    return 'Estamos esperando confirmación de la pasarela. Puedes actualizar este estado.';
+  }
+
+  if (paymentStatus.value === 'failed') {
+    return 'El pago no se completó. Revisa tus órdenes para intentar nuevamente.';
+  }
+
+  return 'Estado de pago actualizado.';
+});
+
+const paymentStatusCardClass = computed(() => {
+  const classes = {
+    completed: 'border-emerald-200 bg-emerald-50',
+    pending: 'border-amber-200 bg-amber-50',
+    failed: 'border-red-200 bg-red-50',
+    refunded: 'border-gray-200 bg-gray-100',
+    partially_refunded: 'border-sky-200 bg-sky-50',
+  };
+
+  return classes[paymentStatus.value] || 'border-gray-200 bg-gray-50';
+});
+
+const paymentStatusTextClass = computed(() => {
+  const classes = {
+    completed: 'text-emerald-700',
+    pending: 'text-amber-700',
+    failed: 'text-red-700',
+    refunded: 'text-gray-700',
+    partially_refunded: 'text-sky-700',
+  };
+
+  return classes[paymentStatus.value] || 'text-gray-700';
+});
 
 /**
  * Format currency
@@ -331,6 +412,17 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
+const refreshPaymentStatus = async () => {
+  if (!paymentUuid.value) return;
+
+  paymentRefreshLoading.value = true;
+  try {
+    await checkoutStore.refreshPaymentStatus(paymentUuid.value);
+  } finally {
+    paymentRefreshLoading.value = false;
+  }
+};
+
 /**
  * Load order on mount
  */
@@ -339,27 +431,34 @@ onMounted(async () => {
   if (!order.value && route.params.orderId) {
     loading.value = true;
     try {
-      // Try to get order from API
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`/api/customer/orders/${route.params.orderId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        // Store the order in checkout store
-        checkoutStore.order = data.data || data;
-      } else {
-        console.error('Failed to load order:', response.status);
-      }
+      const response = await api.get(`/customer/orders/${route.params.orderId}`);
+      checkoutStore.order = response.data?.data || response.data;
     } catch (error) {
       console.error('Error loading order:', error);
     } finally {
       loading.value = false;
     }
+  }
+
+  if (paymentUuid.value) {
+    await refreshPaymentStatus();
+  }
+
+  if (paymentPollInterval) {
+    clearInterval(paymentPollInterval);
+  }
+
+  paymentPollInterval = setInterval(async () => {
+    if (paymentStatus.value !== 'pending' || !paymentUuid.value) {
+      return;
+    }
+    await refreshPaymentStatus();
+  }, 7000);
+});
+
+onBeforeUnmount(() => {
+  if (paymentPollInterval) {
+    clearInterval(paymentPollInterval);
   }
 });
 </script>

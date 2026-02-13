@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class ,
             CategorySeeder::class ,
             ProductSeeder::class ,
+            PaymentMethodSeeder::class,
             MenuSeeder::class ,
             EnsureTiendaMenuItemSeeder::class,
             HomeSectionSeeder::class ,

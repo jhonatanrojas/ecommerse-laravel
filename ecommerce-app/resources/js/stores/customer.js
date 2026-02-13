@@ -24,6 +24,8 @@ export const useCustomerStore = defineStore('customer', {
       addresses: false,
       orders: false,
       orderDetail: false,
+      refund: false,
+      paymentRetry: false,
       password: false,
       addressMutation: false,
       defaultAddress: false,
@@ -120,6 +122,41 @@ export const useCustomerStore = defineStore('customer', {
         return { success: false, ...normalized };
       } finally {
         this.loading.orderDetail = false;
+      }
+    },
+
+    async refundPayment(paymentUuid, amount) {
+      this.loading.refund = true;
+      this.clearErrors();
+
+      try {
+        const { data } = await api.post(`/payments/${paymentUuid}/refund`, { amount });
+        return { success: true, payment: data?.data ?? data };
+      } catch (error) {
+        const normalized = this.setError(error);
+        return { success: false, ...normalized };
+      } finally {
+        this.loading.refund = false;
+      }
+    },
+
+    async retryPayment({ orderId, paymentMethod, amount }) {
+      this.loading.paymentRetry = true;
+      this.clearErrors();
+
+      try {
+        const { data } = await api.post('/payments', {
+          order_id: orderId,
+          payment_method: paymentMethod,
+          amount,
+        });
+
+        return { success: true, payment: data?.data ?? data };
+      } catch (error) {
+        const normalized = this.setError(error);
+        return { success: false, ...normalized };
+      } finally {
+        this.loading.paymentRetry = false;
       }
     },
 

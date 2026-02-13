@@ -180,12 +180,76 @@
         <!-- Estado de Pago -->
         <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
             <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Estado de Pago</h2>
-            @include('admin.orders.partials.payment-badge', ['status' => $order->payment_status])
+            
+            @if($payment)
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Estado Actual</label>
+                    @include('admin.orders.partials.payment-record-badge', ['status' => $payment->status])
+                </div>
+
+                @if($payment->transaction_id)
+                <div class="mb-4">
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">ID de Transacción:</span>
+                    <p class="text-sm text-gray-900 dark:text-white font-mono">{{ $payment->transaction_id }}</p>
+                </div>
+                @endif
+
+                @if($payment->payment_date)
+                <div class="mb-4">
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Fecha de Pago:</span>
+                    <p class="text-sm text-gray-900 dark:text-white">{{ $payment->payment_date->format('d/m/Y H:i') }}</p>
+                </div>
+                @endif
+
+                @if($payment->refund_date)
+                <div class="mb-4">
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Fecha de Reembolso:</span>
+                    <p class="text-sm text-gray-900 dark:text-white">{{ $payment->refund_date->format('d/m/Y H:i') }}</p>
+                </div>
+                @endif
+
+                @if($payment->refund_amount)
+                <div class="mb-4">
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Monto Reembolsado:</span>
+                    <p class="text-sm text-gray-900 dark:text-white">${{ number_format($payment->refund_amount, 2) }}</p>
+                </div>
+                @endif
+
+                @if(count($availablePaymentStatuses) > 0)
+                <form method="POST" action="{{ route('admin.orders.payment-status.update', $order->uuid) }}" id="payment-status-form">
+                    @csrf
+                    @method('PATCH')
+                    
+                    <div class="mb-4">
+                        <label for="payment_status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cambiar Estado:</label>
+                        <select id="payment_status" name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="">Seleccionar...</option>
+                            @foreach($availablePaymentStatuses as $status)
+                                <option value="{{ $status->value }}">{{ ucfirst(str_replace('_', ' ', $status->value)) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="admin_note" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nota (opcional):</label>
+                        <textarea id="admin_note" name="admin_note" rows="3" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Razón del cambio de estado..."></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                        Actualizar Estado de Pago
+                    </button>
+                </form>
+                @else
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">No hay cambios de estado disponibles</p>
+                @endif
+            @else
+                <p class="text-sm text-gray-500 dark:text-gray-400">No hay información de pago disponible</p>
+            @endif
             
             @if($order->payment_method)
-            <div class="mt-4">
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Método de Pago:</span>
-                <p class="text-sm text-gray-900 dark:text-white">{{ $order->payment_method }}</p>
+                <p class="text-sm text-gray-900 dark:text-white capitalize">{{ str_replace('_', ' ', $order->payment_method) }}</p>
             </div>
             @endif
         </div>
@@ -253,4 +317,31 @@
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentStatusForm = document.getElementById('payment-status-form');
+    
+    if (paymentStatusForm) {
+        paymentStatusForm.addEventListener('submit', function(e) {
+            const selectedStatus = document.getElementById('payment_status').value;
+            
+            // Confirmación para estados críticos
+            if (selectedStatus === 'completed') {
+                if (!confirm('¿Estás seguro de marcar este pago como completado? Esta acción actualizará el estado de la orden.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            if (selectedStatus === 'refunded' || selectedStatus === 'partially_refunded') {
+                if (!confirm('¿Estás seguro de procesar este reembolso? Asegúrate de haber procesado el reembolso en la pasarela de pago.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    }
+});
+</script>
 @endsection

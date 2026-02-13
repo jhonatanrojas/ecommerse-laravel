@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminPaymentMethodController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
@@ -49,6 +50,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class)
             ->only(['index', 'show', 'update', 'destroy'])
             ->parameters(['orders' => 'uuid']);
+        
+        // Update payment status
+        Route::patch('orders/{uuid}/payment-status', [\App\Http\Controllers\Admin\OrderController::class, 'updatePaymentStatus'])
+            ->name('orders.payment-status.update');
 
         // Users CRUD
         Route::resource('users', UserController::class);
@@ -62,6 +67,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('store', [\App\Http\Controllers\Admin\StoreSettingController::class, 'update'])
                 ->name('store.update');
         });
+
+        // Payment methods (admin)
+        Route::get('payment-methods', [AdminPaymentMethodController::class, 'index'])
+            ->name('payment-methods.index');
+        Route::get('payment-methods/create', [AdminPaymentMethodController::class, 'create'])
+            ->name('payment-methods.create');
+        Route::post('payment-methods', [AdminPaymentMethodController::class, 'store'])
+            ->name('payment-methods.store');
+        Route::get('payment-methods/{payment_method}/edit', [AdminPaymentMethodController::class, 'edit'])
+            ->name('payment-methods.edit');
+        Route::put('payment-methods/{payment_method}', [AdminPaymentMethodController::class, 'update'])
+            ->name('payment-methods.update');
+        Route::patch('payment-methods/{payment_method}/toggle', [AdminPaymentMethodController::class, 'toggleStatus'])
+            ->name('payment-methods.toggle');
+        Route::delete('payment-methods/{payment_method}', [AdminPaymentMethodController::class, 'destroy'])
+            ->name('payment-methods.destroy');
 
         // Home Sections
         Route::post('home-sections/reorder', [\App\Http\Controllers\Admin\HomeSectionController::class, 'reorder'])

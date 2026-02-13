@@ -11,9 +11,16 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class PayPalPaymentDriver implements PaymentGatewayInterface
 {
+    /**
+     * @param array<string, mixed> $config
+     */
+    public function __construct(
+        private array $config = []
+    ) {}
+
     public function charge(Payment $payment): array
     {
-        $forceFailure = (bool) config('payments.gateways.paypal.force_failure', false);
+        $forceFailure = (bool) ($this->config['force_failure'] ?? config('payments.gateways.paypal.force_failure', false));
         $status = $forceFailure ? PaymentRecordStatus::Failed->value : PaymentRecordStatus::Completed->value;
 
         return [
@@ -72,7 +79,7 @@ class PayPalPaymentDriver implements PaymentGatewayInterface
 
     private function assertValidSignature(Request $request): void
     {
-        $secret = (string) config('payments.gateways.paypal.webhook_secret', '');
+        $secret = (string) ($this->config['webhook_secret'] ?? config('payments.gateways.paypal.webhook_secret', ''));
         if ($secret === '') {
             return;
         }

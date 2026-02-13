@@ -56,6 +56,7 @@ const getIconDisplay = (icon) => {
     paypal: 'PayPal',
     bank: 'Banco',
     cash: 'Efectivo',
+    wallet: 'Wallet',
   };
 
   return iconMap[icon] || 'Pago';

@@ -3,29 +3,39 @@
 namespace App\Services\Payments;
 
 use App\Exceptions\Payments\UnsupportedPaymentGatewayException;
+use App\Models\PaymentMethod;
 use App\Services\Payments\Contracts\PaymentGatewayInterface;
-use App\Services\Payments\Drivers\MercadoPagoPaymentDriver;
-use App\Services\Payments\Drivers\PayPalPaymentDriver;
-use App\Services\Payments\Drivers\StripePaymentDriver;
 
 class PaymentGatewayFactory
 {
-    public function __construct(
-        private StripePaymentDriver $stripeDriver,
-        private PayPalPaymentDriver $paypalDriver,
-        private MercadoPagoPaymentDriver $mercadoPagoDriver
-    ) {}
-
-    public function make(string $method): PaymentGatewayInterface
+    public function make(string $method, bool $onlyActive = true): PaymentGatewayInterface
     {
-        $normalizedMethod = strtolower(trim($method));
+        $normalizedMethod = str_replace('_', '', strtolower(trim($method)));
 
-        return match ($normalizedMethod) {
-            'stripe' => $this->stripeDriver,
-            'paypal' => $this->paypalDriver,
-            'mercadopago', 'mercado_pago' => $this->mercadoPagoDriver,
-            default => throw UnsupportedPaymentGatewayException::forMethod($method),
-        };
+        $query = PaymentMethod::query()->where('slug', $normalizedMethod);
+        if ($onlyActive) {
+            $query->where('is_active', true);
+        }
+
+        $paymentMethod = $query->first();
+
+        if (!$paymentMethod) {
+            throw UnsupportedPaymentGatewayException::forMethod($method);
+        }
+
+        $driverClass = $paymentMethod->driver_class;
+        if (!class_exists($driverClass)) {
+            throw UnsupportedPaymentGatewayException::forMethod($method);
+        }
+
+        $driver = app()->makeWith($driverClass, [
+            'config' => (array) ($paymentMethod->config ?? []),
+        ]);
+
+        if (!$driver instanceof PaymentGatewayInterface) {
+            throw UnsupportedPaymentGatewayException::forMethod($method);
+        }
+
+        return $driver;
     }
 }
-

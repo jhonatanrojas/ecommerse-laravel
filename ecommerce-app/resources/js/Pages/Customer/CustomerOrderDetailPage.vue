@@ -158,6 +158,72 @@
               </div>
             </div>
           </section>
+
+          <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-md sm:p-6">
+            <h3 class="text-lg font-bold text-gray-900">Pago y reembolso</h3>
+
+            <div v-if="!payments.length" class="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+              Esta orden aún no tiene pagos registrados.
+            </div>
+
+            <div v-else class="mt-4 space-y-3">
+              <article
+                v-for="payment in payments"
+                :key="payment.uuid"
+                class="rounded-xl border border-gray-100 bg-gray-50 p-3"
+              >
+                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Pago {{ payment.uuid }}</p>
+                <p class="mt-1 text-sm font-semibold text-gray-900">{{ payment.payment_method }}</p>
+                <p class="mt-1 text-xs text-gray-600">Estado: {{ paymentRecordStatusLabel(payment.status) }}</p>
+                <p class="mt-1 text-xs text-gray-600">Monto: {{ formatCurrency(payment.amount) }}</p>
+                <p v-if="Number(payment.refund_amount || 0) > 0" class="mt-1 text-xs text-gray-600">
+                  Reembolsado: {{ formatCurrency(payment.refund_amount) }}
+                </p>
+
+                <button
+                  v-if="isRetryablePayment(payment)"
+                  type="button"
+                  class="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="customerStore.loading.paymentRetry"
+                  @click="handleRetryPayment(payment)"
+                >
+                  {{ customerStore.loading.paymentRetry ? 'Reintentando...' : `Reintentar pago (${payment.payment_method})` }}
+                </button>
+              </article>
+            </div>
+
+            <p v-if="paymentRetryMessage" class="mt-3 text-xs font-medium text-indigo-700">
+              {{ paymentRetryMessage }}
+            </p>
+
+            <div v-if="refundablePayment" class="mt-4 rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+              <p class="text-sm font-semibold text-gray-900">Solicitar reembolso</p>
+              <p class="mt-1 text-xs text-gray-600">
+                Máximo disponible: {{ formatCurrency(maxRefundableAmount) }}
+              </p>
+              <div class="mt-3 space-y-2">
+                <input
+                  v-model.number="refundAmount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  :max="maxRefundableAmount"
+                  class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                  placeholder="Monto a reembolsar"
+                />
+                <button
+                  type="button"
+                  class="inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="refundButtonDisabled"
+                  @click="handleRefund"
+                >
+                  {{ customerStore.loading.refund ? 'Procesando...' : 'Solicitar reembolso' }}
+                </button>
+              </div>
+              <p v-if="refundError" class="mt-2 text-xs font-medium text-red-600">{{ refundError }}</p>
+              <p v-if="refundSuccessMessage" class="mt-2 text-xs font-medium text-emerald-600">{{ refundSuccessMessage }}</p>
+            </div>
+          </section>
         </div>
       </aside>
     </div>
@@ -165,7 +231,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import CustomerLayout from '../../components/customer/CustomerLayout.vue';
 import { useCustomerStore } from '../../stores/customer';
@@ -175,9 +241,38 @@ const customerStore = useCustomerStore();
 
 const order = computed(() => customerStore.currentOrder);
 const errorMessage = computed(() => customerStore.errors.message || '');
+const refundAmount = ref(null);
+const refundError = ref('');
+const refundSuccessMessage = ref('');
+const paymentRetryMessage = ref('');
 
 const shippingAddress = computed(() => {
   return order.value?.shipping_address || order.value?.shippingAddress || null;
+});
+
+const payments = computed(() => order.value?.payments || []);
+
+const refundablePayment = computed(() => {
+  return payments.value.find((payment) => {
+    return ['completed', 'partially_refunded'].includes(payment.status);
+  }) || null;
+});
+
+const maxRefundableAmount = computed(() => {
+  if (!refundablePayment.value) return 0;
+  const paid = Number(refundablePayment.value.amount || 0);
+  const refunded = Number(refundablePayment.value.refund_amount || 0);
+  return Math.max(0, Number((paid - refunded).toFixed(2)));
+});
+
+const refundButtonDisabled = computed(() => {
+  return (
+    customerStore.loading.refund ||
+    !refundablePayment.value ||
+    !refundAmount.value ||
+    Number(refundAmount.value) <= 0 ||
+    Number(refundAmount.value) > maxRefundableAmount.value
+  );
 });
 
 const loadOrder = async () => {
@@ -217,6 +312,19 @@ const paymentStatusLabel = (status) => {
     paid: 'Pagado',
     failed: 'Fallido',
     refunded: 'Reembolsado',
+    partially_refunded: 'Reembolso parcial',
+  };
+
+  return labels[status] || status || 'No especificado';
+};
+
+const paymentRecordStatusLabel = (status) => {
+  const labels = {
+    pending: 'Pendiente',
+    completed: 'Completado',
+    failed: 'Fallido',
+    refunded: 'Reembolsado',
+    partially_refunded: 'Reembolso parcial',
   };
 
   return labels[status] || status || 'No especificado';
@@ -252,6 +360,59 @@ const formatCurrency = (value) => {
     style: 'currency',
     currency: 'USD',
   }).format(Number(value || 0));
+};
+
+const handleRefund = async () => {
+  paymentRetryMessage.value = '';
+  refundError.value = '';
+  refundSuccessMessage.value = '';
+
+  if (!refundablePayment.value) {
+    refundError.value = 'No hay un pago reembolsable para esta orden.';
+    return;
+  }
+
+  const amount = Number(refundAmount.value || 0);
+  if (!amount || amount <= 0 || amount > maxRefundableAmount.value) {
+    refundError.value = 'Ingresa un monto válido dentro del disponible.';
+    return;
+  }
+
+  const result = await customerStore.refundPayment(refundablePayment.value.uuid, amount);
+  if (!result.success) {
+    refundError.value = result.message || 'No se pudo procesar el reembolso.';
+    return;
+  }
+
+  refundAmount.value = null;
+  refundSuccessMessage.value = 'Reembolso procesado correctamente.';
+  await loadOrder();
+};
+
+const isRetryablePayment = (payment) => {
+  return ['failed', 'pending'].includes(payment?.status);
+};
+
+const handleRetryPayment = async (payment) => {
+  if (!order.value) return;
+
+  refundError.value = '';
+  refundSuccessMessage.value = '';
+  paymentRetryMessage.value = '';
+
+  const result = await customerStore.retryPayment({
+    orderId: order.value.uuid || order.value.id,
+    paymentMethod: payment.payment_method,
+    amount: Number(order.value.total || payment.amount || 0),
+  });
+
+  if (!result.success) {
+    paymentRetryMessage.value = result.message || 'No se pudo reintentar el pago.';
+    return;
+  }
+
+  paymentRetryMessage.value = 'Reintento de pago ejecutado. Estado actualizado.';
+  await loadOrder();
 };
 
 onMounted(async () => {

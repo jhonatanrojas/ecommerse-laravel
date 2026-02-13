@@ -30,7 +30,8 @@ class OrderController extends Controller
 {
     public function __construct(
         protected OrderServiceInterface $orderService,
-        protected OrderStatusServiceInterface $statusService
+        protected OrderStatusServiceInterface $statusService,
+        protected \App\Services\Contracts\PaymentStatusServiceInterface $paymentStatusService
     ) {}
 
     /**
@@ -61,8 +62,13 @@ class OrderController extends Controller
 
         $availableStatuses = $this->statusService->getAvailableStatuses($order);
 
-        return view('admin.orders.show', compact('order', 'availableStatuses'));
+        // Obtener el pago más reciente de la orden
+        $payment = $order->payments()->latest()->first();
+        $availablePaymentStatuses = $payment ? $this->paymentStatusService->getAvailableStatuses($payment) : [];
+
+        return view('admin.orders.show', compact('order', 'availableStatuses', 'payment', 'availablePaymentStatuses'));
     }
+
 
     /**
      * Update the specified order
@@ -127,4 +133,51 @@ class OrderController extends Controller
             ->route('admin.orders.index')
             ->with('success', 'Orden cancelada correctamente');
     }
+
+    /**
+     * Update payment status
+     */
+    public function updatePaymentStatus(\App\Http\Requests\Admin\UpdatePaymentStatusRequest $request, string $uuid): RedirectResponse
+    {
+        $order = $this->orderService->getOrderByUuid($uuid);
+
+        if (!$order) {
+            return redirect()
+                ->route('admin.orders.index')
+                ->with('error', 'Orden no encontrada');
+        }
+
+        $payment = $order->payments()->latest()->first();
+
+        if (!$payment) {
+            return redirect()
+                ->back()
+                ->with('error', 'No se encontró un pago asociado a esta orden');
+        }
+
+        $newStatus = \App\Enums\PaymentRecordStatus::from($request->input('status'));
+
+        if (!$this->paymentStatusService->canChangeStatus($payment, $newStatus)) {
+            return redirect()
+                ->back()
+                ->with('error', 'No se puede cambiar al estado seleccionado desde el estado actual');
+        }
+
+        $success = $this->paymentStatusService->changeStatus(
+            $payment,
+            $newStatus,
+            $request->input('admin_note')
+        );
+
+        if ($success) {
+            return redirect()
+                ->route('admin.orders.show', $uuid)
+                ->with('success', 'Estado del pago actualizado correctamente');
+        }
+
+        return redirect()
+            ->back()
+            ->with('error', 'Error al actualizar el estado del pago');
+    }
+
 }

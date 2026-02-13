@@ -162,7 +162,8 @@ const handleSubmit = async () => {
     emit('submit', result.order);
     router.push({
       name: 'order-success',
-      params: { orderId: result.order.id },
+      params: { orderId: result.order.uuid || result.order.id },
+      query: result.payment?.uuid ? { paymentUuid: result.payment.uuid } : {},
     });
   }
 };

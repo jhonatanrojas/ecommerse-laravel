@@ -21,6 +21,12 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\Contracts\UserServiceInterface::class,
             \App\Services\UserService::class
         );
+
+        // Payment Status Service Binding
+        $this->app->bind(
+            \App\Services\Contracts\PaymentStatusServiceInterface::class,
+            \App\Services\Payments\PaymentStatusService::class
+        );
     }
 
     /**

@@ -28,7 +28,8 @@ class CustomerService
             ->with([
                 'items',
                 'shippingAddress',
-                'billingAddress'
+                'billingAddress',
+                'payments',
             ])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -50,7 +51,8 @@ class CustomerService
             ->with([
                 'items.product.images',
                 'shippingAddress',
-                'billingAddress'
+                'billingAddress',
+                'payments',
             ])
             ->first();
     }

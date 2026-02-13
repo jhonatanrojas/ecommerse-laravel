@@ -27,7 +27,7 @@ class PaymentWebhookController extends Controller
         }
 
         try {
-            $driver = $this->paymentGatewayFactory->make($paymentMethod);
+            $driver = $this->paymentGatewayFactory->make($paymentMethod, false);
             $payload = $driver->handleWebhook($request);
             $payment = $this->paymentService->handleWebhook($paymentMethod, $payload);
         } catch (UnsupportedPaymentGatewayException $exception) {
@@ -63,4 +63,3 @@ class PaymentWebhookController extends Controller
         return $payloadMethod ? strtolower((string) $payloadMethod) : null;
     }
 }
-
