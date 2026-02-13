@@ -13,6 +13,22 @@ class DefaultPagesSeeder extends Seeder
      */
     public function run(): void
     {
+        // Obtener el primer usuario admin disponible
+        $adminUser = \App\Models\User::whereHas('roles', function ($query) {
+            $query->where('name', 'admin');
+        })->first();
+
+        // Si no hay admin, usar el primer usuario disponible
+        if (!$adminUser) {
+            $adminUser = \App\Models\User::first();
+        }
+
+        // Si no hay usuarios, no podemos crear páginas con foreign key
+        if (!$adminUser) {
+            $this->command->warn('⚠ No hay usuarios en la base de datos. Ejecuta primero los seeders de usuarios.');
+            return;
+        }
+
         $pages = [
             [
                 'title' => 'Sobre Nosotros',
@@ -39,8 +55,8 @@ class DefaultPagesSeeder extends Seeder
                     'uuid' => Str::uuid(),
                     'is_published' => true,
                     'published_at' => now(),
-                    'created_by' => 1,
-                    'updated_by' => 1,
+                    'created_by' => $adminUser->id,
+                    'updated_by' => $adminUser->id,
                 ])
             );
         }

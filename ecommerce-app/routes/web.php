@@ -44,6 +44,7 @@ Route::get('/order-success/{orderId?}', function ($orderId = null) {
     return view('order-success');
 })->name('order.success');
 
+Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
 Route::get('/pages/{slug}', [PageController::class, 'show'])->name('pages.show');
 
 // Customer App (dashboard, órdenes y detalle)
