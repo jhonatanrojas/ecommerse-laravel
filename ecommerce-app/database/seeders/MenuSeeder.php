@@ -113,7 +113,7 @@ class MenuSeeder extends Seeder
         ]);
 
         $infoItems = [
-            ['label' => 'Acerca de', 'url' => '/about'],
+            ['label' => 'Sobre Nosotros', 'url' => '/pages/about'],
             ['label' => 'Blog', 'url' => '/blog'],
             ['label' => 'Testimonios', 'url' => '/testimonials'],
         ];
@@ -168,7 +168,7 @@ class MenuSeeder extends Seeder
         ]);
 
         $legalItems = [
-            ['label' => 'Términos y Condiciones', 'url' => '/terms'],
+            ['label' => 'Términos y Condiciones', 'url' => '/pages/terminos-y-condiciones'],
             ['label' => 'Política de Privacidad', 'url' => '/privacy'],
             ['label' => 'Cookies', 'url' => '/cookies'],
         ];

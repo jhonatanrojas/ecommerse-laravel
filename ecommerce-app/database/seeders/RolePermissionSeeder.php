@@ -20,6 +20,9 @@ class RolePermissionSeeder extends Seeder
             'manage orders',
             'manage coupons',
             'view reports',
+            'manage_pages',
+            'edit_pages',
+            'delete_pages',
         ];
 
         $guard = 'admin';
@@ -42,6 +45,8 @@ class RolePermissionSeeder extends Seeder
             'manage orders',
             'manage coupons',
             'view reports',
+            'manage_pages',
+            'edit_pages',
         ];
 
         $managerRole->syncPermissions($managerPermissions);
@@ -50,4 +55,3 @@ class RolePermissionSeeder extends Seeder
         $customerRole->syncPermissions([]);
     }
 }
-

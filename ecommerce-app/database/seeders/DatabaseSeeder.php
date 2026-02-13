@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             OrderStatusSeeder::class,
             ShippingStatusSeeder::class,
             PaymentMethodSeeder::class,
+            DefaultPagesSeeder::class,
             MenuSeeder::class ,
             EnsureTiendaMenuItemSeeder::class,
             HomeSectionSeeder::class ,

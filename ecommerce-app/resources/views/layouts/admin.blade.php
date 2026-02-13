@@ -118,7 +118,15 @@
                     </a>
                 </li>
                 <li>
-                    <button type="button" class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.home-sections.*') || request()->routeIs('admin.menus.*') || request()->routeIs('admin.payment-methods.*') || request()->routeIs('admin.order-statuses.*') || request()->routeIs('admin.shipping-statuses.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}" aria-controls="dropdown-settings" data-collapse-toggle="dropdown-settings">
+                    <a href="{{ route('admin.customers.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group {{ request()->routeIs('admin.customers.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                        <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 10a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-7 9a7 7 0 1 1 14 0H3Z"/>
+                        </svg>
+                        <span class="flex-1 ms-3 whitespace-nowrap">Clientes</span>
+                    </a>
+                </li>
+                <li>
+                    <button type="button" class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.home-sections.*') || request()->routeIs('admin.menus.*') || request()->routeIs('admin.payment-methods.*') || request()->routeIs('admin.order-statuses.*') || request()->routeIs('admin.shipping-statuses.*') || request()->routeIs('admin.pages.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}" aria-controls="dropdown-settings" data-collapse-toggle="dropdown-settings">
                         <svg class="flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M18 7.5h-.423l-.452-1.09.3-.3a1.5 1.5 0 0 0 0-2.121L16.01 2.575a1.5 1.5 0 0 0-2.121 0l-.3.3-1.089-.452V2A1.5 1.5 0 0 0 11 .5H9A1.5 1.5 0 0 0 7.5 2v.423l-1.09.452-.3-.3a1.5 1.5 0 0 0-2.121 0L2.576 3.99a1.5 1.5 0 0 0 0 2.121l.3.3L2.423 7.5H2A1.5 1.5 0 0 0 .5 9v2A1.5 1.5 0 0 0 2 12.5h.423l.452 1.09-.3.3a1.5 1.5 0 0 0 0 2.121l1.415 1.413a1.5 1.5 0 0 0 2.121 0l.3-.3 1.09.452V18A1.5 1.5 0 0 0 9 19.5h2a1.5 1.5 0 0 0 1.5-1.5v-.423l1.09-.452.3.3a1.5 1.5 0 0 0 2.121 0l1.415-1.414a1.5 1.5 0 0 0 0-2.121l-.3-.3.452-1.09H18a1.5 1.5 0 0 0 1.5-1.5V9A1.5 1.5 0 0 0 18 7.5Zm-8 6a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/>
                         </svg>
@@ -143,6 +151,13 @@
                                 Menús
                             </a>
                         </li>
+                        @canany(['manage_pages', 'edit_pages', 'delete_pages'])
+                            <li>
+                                <a href="{{ route('admin.pages.index') }}" class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 {{ request()->routeIs('admin.pages.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
+                                    Páginas CMS
+                                </a>
+                            </li>
+                        @endcanany
                         <li>
                             <a href="{{ route('admin.payment-methods.index') }}" class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700 {{ request()->routeIs('admin.payment-methods.*') ? 'bg-gray-100 dark:bg-gray-700' : '' }}">
                                 Métodos de Pago
@@ -204,7 +219,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const settingsDropdown = document.getElementById('dropdown-settings');
-            const isSettingsRoute = {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.home-sections.*') || request()->routeIs('admin.menus.*') || request()->routeIs('admin.payment-methods.*') || request()->routeIs('admin.order-statuses.*') || request()->routeIs('admin.shipping-statuses.*') ? 'true' : 'false' }};
+            const isSettingsRoute = {{ request()->routeIs('admin.settings.*') || request()->routeIs('admin.home-sections.*') || request()->routeIs('admin.menus.*') || request()->routeIs('admin.payment-methods.*') || request()->routeIs('admin.order-statuses.*') || request()->routeIs('admin.shipping-statuses.*') || request()->routeIs('admin.pages.*') ? 'true' : 'false' }};
             
             if (isSettingsRoute && settingsDropdown) {
                 settingsDropdown.classList.remove('hidden');

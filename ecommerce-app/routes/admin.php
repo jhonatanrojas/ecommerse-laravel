@@ -1,9 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminCustomerAddressController;
+use App\Http\Controllers\Admin\AdminCustomerController;
+use App\Http\Controllers\Admin\AdminCustomerOrderController;
 use App\Http\Controllers\Admin\AdminOrderShippingStatusUpdateController;
 use App\Http\Controllers\Admin\AdminOrderStatusController;
 use App\Http\Controllers\Admin\AdminOrderStatusUpdateController;
+use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPaymentMethodController;
 use App\Http\Controllers\Admin\AdminShippingStatusController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -65,6 +69,37 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class);
         Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
             ->name('users.toggle-status');
+
+        // Pages CMS
+        Route::get('pages', [AdminPageController::class, 'index'])
+            ->name('pages.index')
+            ->middleware('permission:manage_pages');
+        Route::get('pages/create', [AdminPageController::class, 'create'])
+            ->name('pages.create')
+            ->middleware('permission:manage_pages');
+        Route::post('pages', [AdminPageController::class, 'store'])
+            ->name('pages.store')
+            ->middleware('permission:manage_pages');
+        Route::get('pages/{uuid}/edit', [AdminPageController::class, 'edit'])
+            ->name('pages.edit')
+            ->middleware('permission:edit_pages|manage_pages');
+        Route::put('pages/{uuid}', [AdminPageController::class, 'update'])
+            ->name('pages.update')
+            ->middleware('permission:edit_pages|manage_pages');
+        Route::patch('pages/{uuid}/toggle', [AdminPageController::class, 'togglePublish'])
+            ->name('pages.toggle')
+            ->middleware('permission:edit_pages|manage_pages');
+        Route::delete('pages/{uuid}', [AdminPageController::class, 'destroy'])
+            ->name('pages.destroy')
+            ->middleware('permission:delete_pages|manage_pages');
+
+        // Customers
+        Route::get('customers', [AdminCustomerController::class, 'index'])->name('customers.index');
+        Route::get('customers/{id}', [AdminCustomerController::class, 'show'])->name('customers.show');
+        Route::put('customers/{id}', [AdminCustomerController::class, 'update'])->name('customers.update');
+        Route::patch('customers/{id}/toggle', [AdminCustomerController::class, 'toggleStatus'])->name('customers.toggle');
+        Route::get('customers/{id}/orders', [AdminCustomerOrderController::class, 'index'])->name('customers.orders.index');
+        Route::get('customers/{id}/addresses', [AdminCustomerAddressController::class, 'index'])->name('customers.addresses.index');
 
         // Store Settings
         Route::prefix('settings')->name('settings.')->group(function () {

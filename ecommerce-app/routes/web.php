@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +43,8 @@ Route::get('/checkout', function () {
 Route::get('/order-success/{orderId?}', function ($orderId = null) {
     return view('order-success');
 })->name('order.success');
+
+Route::get('/pages/{slug}', [PageController::class, 'show'])->name('pages.show');
 
 // Customer App (dashboard, órdenes y detalle)
 Route::middleware(['auth:customer', 'verified'])->group(function () {
