@@ -4,6 +4,13 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController as PublicCategoryController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\Api\Marketplace\VendorPublicController;
+use App\Http\Controllers\Api\Marketplace\VendorRegistrationController;
+use App\Http\Controllers\Api\Marketplace\DirectOrderController;
+use App\Http\Controllers\Api\Marketplace\ProductQuestionController;
+use App\Http\Controllers\Api\Marketplace\ProductReviewController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\ProductController as PublicProductController;
@@ -16,7 +23,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('register', [AuthController::class , 'register']);
 Route::post('login', [AuthController::class , 'login']);
+Route::post('marketplace/vendors/register', [VendorRegistrationController::class, 'store']);
 Route::post('payments/webhook', [PaymentWebhookController::class, 'handle']);
+Route::get('search/autocomplete', [SearchController::class, 'autocomplete']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class , 'logout']);
@@ -24,6 +33,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Customer Backend API Routes - User profile and password
     Route::get('/user', [\App\Http\Controllers\Api\UserController::class, 'show']);
     Route::put('/user/password', [\App\Http\Controllers\Api\UserController::class, 'updatePassword']);
+    Route::get('/wishlist', [WishlistController::class, 'index']);
+    Route::post('/wishlist/{productId}', [WishlistController::class, 'store']);
+    Route::delete('/wishlist/{productId}', [WishlistController::class, 'destroy']);
 
     Route::prefix('customer')->group(function () {
         // Customer Orders
@@ -44,6 +56,17 @@ Route::get('products/{slug}/related', [PublicProductController::class, 'related'
 Route::get('products/{slug}', [PublicProductController::class, 'show']);
 Route::get('categories', [PublicCategoryController::class, 'index']);
 Route::get('categories/{slug}/products', [PublicCategoryController::class, 'products']);
+Route::get('marketplace/products', [VendorPublicController::class, 'marketplace']);
+Route::get('marketplace/search', [VendorPublicController::class, 'search']);
+Route::get('marketplace/vendors', [VendorPublicController::class, 'vendors']);
+Route::get('marketplace/vendors/{slug}', [VendorPublicController::class, 'profile']);
+Route::get('marketplace/vendors/{slug}/products', [VendorPublicController::class, 'products']);
+Route::get('marketplace/products/{slug}', [VendorPublicController::class, 'showProduct']);
+Route::get('marketplace/products/{slug}/reviews', [ProductReviewController::class, 'index']);
+Route::post('orders/direct', [DirectOrderController::class, 'store']);
+Route::get('products/{id}/questions', [ProductQuestionController::class, 'index']);
+Route::post('products/{id}/questions', [ProductQuestionController::class, 'store']);
+Route::middleware('auth:sanctum')->post('marketplace/products/{slug}/reviews', [ProductReviewController::class, 'store']);
 
 // Home Configuration (Public API)
 Route::get('home-configuration', [\App\Http\Controllers\Api\HomeConfigurationController::class , 'index']);

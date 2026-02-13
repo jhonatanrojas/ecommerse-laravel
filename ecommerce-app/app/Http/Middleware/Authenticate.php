@@ -21,6 +21,10 @@ class Authenticate extends Middleware
             return route('admin.login');
         }
 
+        if (str_starts_with($request->path(), 'vendor')) {
+            return route('vendor.login');
+        }
+
         return route('login');
     }
 }

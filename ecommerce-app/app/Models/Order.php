@@ -173,6 +173,14 @@ class Order extends Model
     }
 
     /**
+     * Get the vendor splits for this order.
+     */
+    public function vendorOrders(): HasMany
+    {
+        return $this->hasMany(VendorOrder::class);
+    }
+
+    /**
      * Set order status from admin-configured status catalog.
      */
     public function setStatus(OrderStatus $status): self

@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\Vendor;
+use App\Models\VendorProduct;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -113,10 +115,22 @@ class ProductSeeder extends Seeder
         ];
 
         foreach ($products as $productData) {
-            $product = Product::create($productData);
-            
-            // Agregar imágenes a cada producto
-            $this->addProductImages($product);
+            $product = Product::query()
+                ->where('slug', $productData['slug'])
+                ->orWhere('sku', $productData['sku'])
+                ->first();
+
+            if ($product) {
+                $product->fill($productData);
+                $product->save();
+            } else {
+                $product = Product::query()->create($productData);
+            }
+
+            // Agregar imagen solo si aún no existe una primaria
+            if (! $product->images()->where('is_primary', true)->exists()) {
+                $this->addProductImages($product);
+            }
         }
 
         // Crear productos aleatorios adicionales
@@ -136,6 +150,32 @@ class ProductSeeder extends Seeder
 
         // Crear algunos productos sin stock
         Product::factory()->count(3)->outOfStock()->create();
+
+        // Asignar una parte del catálogo a vendedores aprobados del marketplace
+        $approvedVendors = Vendor::query()->where('status', 'approved')->get();
+        if ($approvedVendors->isNotEmpty()) {
+            $marketplaceProducts = Product::query()
+                ->inRandomOrder()
+                ->take(min(30, Product::count()))
+                ->get();
+
+            foreach ($marketplaceProducts as $product) {
+                $vendor = $approvedVendors->random();
+
+                VendorProduct::query()->firstOrCreate(
+                    [
+                        'vendor_id' => $vendor->id,
+                        'product_id' => $product->id,
+                    ],
+                    [
+                        'is_active' => true,
+                        'is_approved' => true,
+                        'approved_at' => now()->subDays(rand(1, 14)),
+                        'moderation_notes' => 'Aprobado por seeder inicial de marketplace.',
+                    ]
+                );
+            }
+        }
 
         $this->command->info('Productos creados exitosamente.');
     }

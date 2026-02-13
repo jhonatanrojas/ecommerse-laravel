@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             UserModuleSeeder::class ,
             AdminUserSeeder::class ,
             CategorySeeder::class ,
+            VendorSeeder::class ,
             ProductSeeder::class ,
             OrderStatusSeeder::class,
             ShippingStatusSeeder::class,

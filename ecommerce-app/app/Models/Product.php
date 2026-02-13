@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -154,6 +155,53 @@ class Product extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Order items linked to this product.
+     */
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * Product view rows.
+     */
+    public function views(): HasMany
+    {
+        return $this->hasMany(ProductView::class);
+    }
+
+    /**
+     * Product Q&A messages.
+     */
+    public function questions(): HasMany
+    {
+        return $this->hasMany(ProductQuestion::class);
+    }
+
+    /**
+     * Marketplace link rows for this product.
+     */
+    public function vendorProducts(): HasMany
+    {
+        return $this->hasMany(VendorProduct::class);
+    }
+
+    /**
+     * Primary vendor relation (one product belongs to one vendor in marketplace context).
+     */
+    public function vendor(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Vendor::class,
+            VendorProduct::class,
+            'product_id',
+            'id',
+            'id',
+            'vendor_id'
+        );
     }
 
     /**

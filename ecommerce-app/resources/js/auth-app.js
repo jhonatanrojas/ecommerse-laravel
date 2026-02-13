@@ -3,12 +3,11 @@ import '../css/app.css';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
+import { initLazyLoad } from './plugins/lazyload';
 import RegisterPage from './Pages/Auth/RegisterPage.vue';
 import LoginPage from './Pages/Auth/LoginPage.vue';
 
 const pinia = createPinia();
-
-// Determinar qué componente renderizar basado en la ruta
 const currentPath = window.location.pathname;
 let component = null;
 
@@ -21,5 +20,6 @@ if (currentPath === '/register') {
 if (component) {
   const app = createApp(component);
   app.use(pinia);
+  initLazyLoad();
   app.mount('#app');
 }

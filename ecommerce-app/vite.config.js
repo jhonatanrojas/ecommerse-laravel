@@ -16,6 +16,7 @@ export default defineConfig({
                 'resources/js/auth-app.js',
                 'resources/js/checkout-app.js',
                 'resources/js/customer-app.js',
+                'resources/js/marketplace-app.js',
             ],
             refresh: true,
         }),
@@ -32,6 +33,30 @@ export default defineConfig({
         alias: {
             vue: 'vue/dist/vue.esm-bundler.js',
             'ziggy-js': 'vendor/tightenco/ziggy/dist/index.esm.js',
+        },
+    },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('vue') || id.includes('pinia') || id.includes('vue-router')) {
+                            return 'vendor-vue';
+                        }
+                        if (id.includes('@headlessui') || id.includes('@vueuse')) {
+                            return 'vendor-ui';
+                        }
+                        if (id.includes('dayjs') || id.includes('vanilla-lazyload')) {
+                            return 'vendor-utils';
+                        }
+                        return 'vendor';
+                    }
+
+                    if (id.includes('/Pages/Marketplace/')) return 'page-marketplace';
+                    if (id.includes('/Pages/Customer/')) return 'page-customer';
+                    if (id.includes('/Pages/Admin/')) return 'page-admin';
+                },
+            },
         },
     },
 });

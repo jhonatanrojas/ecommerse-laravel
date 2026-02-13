@@ -1,5 +1,8 @@
 <template>
   <div class="home-page bg-white">
+    <a href="#main-content" class="sr-only rounded-md bg-blue-600 px-4 py-3 font-semibold text-white focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[999]">
+      Saltar al contenido principal
+    </a>
 
     <!-- ===== PROMO BAR ===== -->
     <div v-if="showPromoBar" class="bg-indigo-600 text-white text-center text-xs sm:text-sm py-2 px-4 relative">
@@ -29,19 +32,11 @@
 
           <!-- Desktop Search Bar -->
           <div class="hidden md:flex flex-1 max-w-xl mx-8">
-            <div class="relative w-full">
-              <input
-                v-model="searchQuery"
-                type="search"
-                placeholder="¿Qué estás buscando?"
-                class="w-full pl-11 pr-4 py-2.5 bg-gray-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-200 focus:bg-white transition-all duration-200"
-                aria-label="Buscar productos"
-                @keyup.enter="handleSearch"
-              />
-              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-            </div>
+            <SmartSearch
+              v-model="searchQuery"
+              @search="handleSearch"
+              @navigate="navigateTo"
+            />
           </div>
 
           <!-- Desktop Navigation -->
@@ -145,19 +140,12 @@
           leave-to-class="opacity-0 -translate-y-2"
         >
           <div v-if="mobileSearchOpen" class="md:hidden pb-3">
-            <div class="relative">
-              <input
-                v-model="searchQuery"
-                type="search"
-                placeholder="¿Qué estás buscando?"
-                class="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-indigo-200"
-                aria-label="Buscar productos"
-                @keyup.enter="handleSearch"
-              />
-              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-              </svg>
-            </div>
+            <SmartSearch
+              v-model="searchQuery"
+              sticky-on-mobile
+              @search="handleSearch"
+              @navigate="navigateTo"
+            />
           </div>
         </transition>
 
@@ -235,7 +223,10 @@
     </div>
 
     <!-- Sections -->
-    <main v-else>
+    <main v-else id="main-content" tabindex="-1">
+      <div class="container mx-auto px-4 pt-8">
+        <HeroCarousel :slides="heroSlidesFromSections" />
+      </div>
       <component
         v-for="section in sections"
         :key="section.uuid"
@@ -244,6 +235,7 @@
       />
 
       <!-- Static sections (always rendered after dynamic sections) -->
+      <TrustBar />
       <BenefitsSection />
       <NewsletterSection />
       <TrustBadges />
@@ -346,6 +338,9 @@
 <script>
 import { onMounted, computed, defineAsyncComponent } from 'vue';
 import Navigation from '../Components/Navigation.vue';
+import HeroCarousel from './home/HeroCarousel.vue';
+import TrustBar from './home/TrustBar.vue';
+import SmartSearch from './shared/SmartSearch.vue';
 import { useCartStore } from '../stores/cart';
 import { useAuthStore } from '../stores/auth';
 
@@ -371,6 +366,9 @@ export default {
     BenefitsSection,
     NewsletterSection,
     TrustBadges,
+    HeroCarousel,
+    TrustBar,
+    SmartSearch,
     Navigation,
   },
   setup() {
@@ -423,6 +421,66 @@ export default {
   beforeUnmount() {
     window.removeEventListener('scroll', this.handleScroll);
   },
+  computed: {
+    heroSlidesFromSections() {
+      const hero = this.sections.find((section) => section.type === 'hero');
+      const banners = this.sections.find((section) => section.type === 'banners');
+      const slides = [];
+
+      const heroData = hero?.rendered_data || hero?.configuration || {};
+      if (heroData?.title) {
+        slides.push({
+          id: `${hero?.uuid || 'hero'}-primary`,
+          type: 'custom',
+          title: heroData.title,
+          subtitle: heroData.subtitle || '',
+          badge: 'DESTACADO',
+          cta: {
+            text: heroData.cta_buttons?.[0]?.text || 'Comprar ahora',
+            link: heroData.cta_buttons?.[0]?.url || '/products',
+          },
+          image: heroData.background_image || '',
+          gradient: 'bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-900',
+        });
+      }
+
+      const bannerItems = banners?.rendered_data?.banners || banners?.configuration?.banners || [];
+      bannerItems.slice(0, 4).forEach((banner, index) => {
+        slides.push({
+          id: `${banners?.uuid || 'banner'}-${index}`,
+          type: index === 0 ? 'offer' : 'collection',
+          title: banner.title || 'Oferta especial',
+          subtitle: banner.subtitle || '',
+          badge: index === 0 ? 'OFERTA DEL DIA' : 'NUEVO',
+          cta: {
+            text: banner.button_text || 'Ver mas',
+            link: banner.link || '/products',
+          },
+          image: banner.image || '',
+          endTime: index === 0 ? new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString() : null,
+          gradient: index % 2 === 0
+            ? 'bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-900'
+            : 'bg-gradient-to-br from-emerald-700 via-teal-700 to-cyan-900',
+        });
+      });
+
+      if (slides.length) return slides;
+
+      return [
+        {
+          id: 'fallback-1',
+          type: 'offer',
+          title: 'Bienvenido a Nuestra Tienda',
+          subtitle: 'Descubre los mejores productos al mejor precio',
+          badge: 'OFERTA DEL DIA',
+          cta: { text: 'Comprar ahora', link: '/products' },
+          image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&h=600&fit=crop',
+          endTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+          gradient: 'bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-900',
+        },
+      ];
+    },
+  },
   methods: {
     async fetchConfiguration() {
       try {
@@ -450,9 +508,14 @@ export default {
       };
       return componentMap[type] || null;
     },
-    handleSearch() {
-      if (this.searchQuery.trim()) {
-        window.location.href = `/products?search=${encodeURIComponent(this.searchQuery.trim())}`;
+    handleSearch(query = this.searchQuery) {
+      if (query.trim()) {
+        window.location.href = `/products?search=${encodeURIComponent(query.trim())}`;
+      }
+    },
+    navigateTo(path) {
+      if (path) {
+        window.location.href = path;
       }
     },
     handleScroll() {

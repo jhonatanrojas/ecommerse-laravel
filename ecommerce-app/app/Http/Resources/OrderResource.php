@@ -68,6 +68,18 @@ class OrderResource extends JsonResource
                     ];
                 })->values();
             }),
+            'vendor_orders' => $this->whenLoaded('vendorOrders', function () {
+                return $this->vendorOrders->map(function ($vendorOrder) {
+                    return [
+                        'vendor_id' => $vendorOrder->vendor_id,
+                        'subtotal' => (float) $vendorOrder->subtotal,
+                        'commission_amount' => (float) $vendorOrder->commission_amount,
+                        'vendor_earnings' => (float) $vendorOrder->vendor_earnings,
+                        'payout_status' => $vendorOrder->payout_status,
+                        'shipping_status' => $vendorOrder->shipping_status,
+                    ];
+                })->values();
+            }),
         ];
     }
 }

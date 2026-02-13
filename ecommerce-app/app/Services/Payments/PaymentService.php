@@ -6,12 +6,16 @@ use App\Enums\PaymentRecordStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\StoreSetting;
+use App\Models\Vendor;
+use App\Services\Marketplace\VendorPayoutService;
 use Illuminate\Support\Facades\DB;
 
 class PaymentService
 {
     public function __construct(
-        private PaymentGatewayFactory $paymentGatewayFactory
+        private PaymentGatewayFactory $paymentGatewayFactory,
+        private VendorPayoutService $vendorPayoutService
     ) {}
 
     public function createPayment(Order $order, string $method): Payment
@@ -57,8 +61,9 @@ class PaymentService
     public function updateStatus(Payment $payment, string $status, array $gatewayResponse): Payment
     {
         $paymentStatus = PaymentRecordStatus::tryFrom($status) ?? PaymentRecordStatus::Pending;
+        $wasCompleted = $payment->status === PaymentRecordStatus::Completed;
 
-        return DB::transaction(function () use ($payment, $paymentStatus, $gatewayResponse) {
+        return DB::transaction(function () use ($payment, $paymentStatus, $gatewayResponse, $wasCompleted) {
             $currentGatewayResponse = (array) ($payment->gateway_response ?? []);
             $payment->status = $paymentStatus->value;
             $payment->gateway_response = array_merge($currentGatewayResponse, $gatewayResponse);
@@ -92,6 +97,24 @@ class PaymentService
             }
 
             $order->save();
+
+            $shouldAutoPayout = (bool) (StoreSetting::query()->value('enable_automatic_payouts') ?? false);
+            if ($paymentStatus === PaymentRecordStatus::Completed && !$wasCompleted && $shouldAutoPayout) {
+                $order->loadMissing('vendorOrders');
+                $vendorIds = $order->vendorOrders->pluck('vendor_id')->unique()->values();
+
+                foreach ($vendorIds as $vendorId) {
+                    $vendor = Vendor::query()->find($vendorId);
+                    if (! $vendor) {
+                        continue;
+                    }
+
+                    $payout = $this->vendorPayoutService->createPendingPayout($vendor);
+                    if ($payout) {
+                        $this->vendorPayoutService->processPayout($payout);
+                    }
+                }
+            }
 
             return $payment;
         });
@@ -134,9 +157,36 @@ class PaymentService
             $payment->save();
 
             $this->updateStatus($payment, $status, (array) ($response['gateway_response'] ?? []));
+            $this->adjustVendorOrdersForRefund($payment, (float) ($response['refund_amount'] ?? 0));
         });
 
         return $payment->fresh(['order']);
+    }
+
+    protected function adjustVendorOrdersForRefund(Payment $payment, float $refundAmount): void
+    {
+        if ($refundAmount <= 0) {
+            return;
+        }
+
+        $order = $payment->order()->with('vendorOrders')->first();
+        if (! $order || $order->vendorOrders->isEmpty()) {
+            return;
+        }
+
+        $paymentAmount = (float) $payment->amount;
+        if ($paymentAmount <= 0) {
+            return;
+        }
+
+        $ratio = min(1, $refundAmount / $paymentAmount);
+
+        foreach ($order->vendorOrders as $vendorOrder) {
+            $vendorOrder->subtotal = round(max(0, ((float) $vendorOrder->subtotal) * (1 - $ratio)), 2);
+            $vendorOrder->commission_amount = round(max(0, ((float) $vendorOrder->commission_amount) * (1 - $ratio)), 2);
+            $vendorOrder->vendor_earnings = round(max(0, ((float) $vendorOrder->vendor_earnings) * (1 - $ratio)), 2);
+            $vendorOrder->save();
+        }
     }
 
     public function handleWebhook(string $paymentMethod, array $payload): ?Payment

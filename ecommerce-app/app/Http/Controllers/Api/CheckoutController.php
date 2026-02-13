@@ -84,6 +84,7 @@ class CheckoutController extends Controller
         );
 
         $order = $this->cartService->checkout($cart, $checkoutData, $user, $sessionId);
+        $order->load(['items', 'shippingAddress', 'billingAddress', 'payments', 'vendorOrders']);
 
         return response()->json([
             'success' => true,

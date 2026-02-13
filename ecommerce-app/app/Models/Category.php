@@ -22,6 +22,7 @@ class Category extends Model
         'image',
         'order',
         'is_active',
+        'commission_rate',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -29,6 +30,7 @@ class Category extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'commission_rate' => 'decimal:2',
         'order' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

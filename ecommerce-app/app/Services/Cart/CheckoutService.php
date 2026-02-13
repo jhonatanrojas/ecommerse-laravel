@@ -14,16 +14,17 @@ use App\Models\Order;
 use App\Models\OrderStatus as OrderStatusModel;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\VendorProduct;
 use App\Services\Cart\DTOs\CheckoutData;
+use App\Services\Marketplace\VendorOrderService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CheckoutService
 {
-    public function __construct()
-    {
-        // Dependencies will be injected as needed
-    }
+    public function __construct(
+        protected VendorOrderService $vendorOrderService
+    ) {}
 
     /**
      * Process the complete checkout flow
@@ -38,6 +39,9 @@ class CheckoutService
 
                 // Create order items from cart items
                 $this->createOrderItems($order, $cart);
+
+                // Split order by vendor and register marketplace commissions
+                $this->vendorOrderService->syncFromOrder($order);
 
                 // Decrement stock for all cart items
                 $this->decrementStock($cart);
@@ -111,7 +115,14 @@ class CheckoutService
             $itemTotal = $itemSubtotal + $itemTax;
 
             // Create order item with snapshot of product data
+            $vendorId = VendorProduct::query()
+                ->where('product_id', $cartItem->product_id)
+                ->where('is_active', true)
+                ->where('is_approved', true)
+                ->value('vendor_id');
+
             $order->items()->create([
+                'vendor_id' => $vendorId,
                 'product_id' => $cartItem->product_id,
                 'product_variant_id' => $cartItem->product_variant_id,
                 'product_name' => $productName,

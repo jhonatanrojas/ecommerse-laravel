@@ -156,21 +156,21 @@
 
     <div
       v-if="product && !loading"
-      class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 p-3 backdrop-blur-sm md:hidden"
+      class="fixed inset-x-0 bottom-0 z-[120] border-t border-gray-200 bg-white p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-lg md:hidden"
     >
-      <div class="mx-auto flex max-w-3xl items-center gap-3">
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-xs text-gray-500">{{ product.name }}</p>
-          <p class="text-base font-extrabold text-gray-900">${{ formatPrice(currentPrice) }}</p>
-        </div>
+      <div class="mx-auto flex max-w-3xl items-center gap-2">
         <button
-          class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-          :disabled="isOutOfStock || addingToCart"
-          @click="addToCart"
+          class="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700"
+          @click="contactSeller"
         >
-          <span v-if="addingToCart" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          <span v-else-if="justAddedMain">Añadido</span>
-          <span v-else>Añadir</span>
+          Contactar vendedor
+        </button>
+        <button
+          class="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+          :disabled="isOutOfStock || addingToCart"
+          @click="buyNowMobile"
+        >
+          Comprar ahora
         </button>
       </div>
     </div>
@@ -363,6 +363,18 @@ async function addToCart() {
     showToast('success', `${product.value.name} fue añadido al carrito.`, 'Producto agregado');
   } else {
     showToast('error', result.error || 'No se pudo agregar el producto al carrito.', 'Error');
+  }
+}
+
+function contactSeller() {
+  if (!product.value?.id) return;
+  window.location.href = `/marketplace/products/${product.value.slug}`;
+}
+
+async function buyNowMobile() {
+  await addToCart();
+  if (!isOutOfStock.value) {
+    window.location.href = '/checkout';
   }
 }
 

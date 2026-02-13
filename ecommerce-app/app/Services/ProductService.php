@@ -59,6 +59,7 @@ class ProductService implements ProductServiceInterface
                 'variants:id,product_id,name,sku,price,stock,attributes',
             ]);
 
+        $this->applyMarketplaceVisibility($query);
         $this->applyCatalogFilters($query, $filters);
         $this->applyCatalogSorting($query, $filters['sort'] ?? null);
 
@@ -105,6 +106,14 @@ class ProductService implements ProductServiceInterface
                 ])
                 ->where('slug', $slug)
                 ->where('is_active', true)
+                ->where(function (Builder $query) {
+                    $query->whereDoesntHave('vendorProducts')
+                        ->orWhereHas('vendorProducts', function (Builder $q) {
+                            $q->where('is_active', true)
+                                ->where('is_approved', true)
+                                ->whereHas('vendor', fn (Builder $vendorQuery) => $vendorQuery->where('status', 'approved'));
+                        });
+                })
                 ->first();
 
             if (! $product) {
@@ -139,6 +148,14 @@ class ProductService implements ProductServiceInterface
                     'variants:id,product_id,name,sku,price,stock,attributes',
                 ])
                 ->where('is_active', true)
+                ->where(function (Builder $query) {
+                    $query->whereDoesntHave('vendorProducts')
+                        ->orWhereHas('vendorProducts', function (Builder $q) {
+                            $q->where('is_active', true)
+                                ->where('is_approved', true)
+                                ->whereHas('vendor', fn (Builder $vendorQuery) => $vendorQuery->where('status', 'approved'));
+                        });
+                })
                 ->where('id', '!=', $product->id)
                 ->when(
                     $product->category_id,
@@ -377,6 +394,18 @@ class ProductService implements ProductServiceInterface
             'price_desc' => $query->orderByDesc('price'),
             default => $query->latest(),
         };
+    }
+
+    protected function applyMarketplaceVisibility(Builder $query): void
+    {
+        $query->where(function (Builder $builder) {
+            $builder->whereDoesntHave('vendorProducts')
+                ->orWhereHas('vendorProducts', function (Builder $q) {
+                    $q->where('is_active', true)
+                        ->where('is_approved', true)
+                        ->whereHas('vendor', fn (Builder $vendorQuery) => $vendorQuery->where('status', 'approved'));
+                });
+        });
     }
 
     protected function buildProductsCacheKey(array $filters, int $perPage): string

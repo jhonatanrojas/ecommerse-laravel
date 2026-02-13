@@ -13,6 +13,10 @@ use App\Http\Controllers\Admin\AdminShippingStatusController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VendorController;
+use App\Http\Controllers\Admin\VendorDisputeController;
+use App\Http\Controllers\Admin\VendorPayoutController;
+use App\Http\Controllers\Admin\VendorProductModerationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -100,6 +104,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('customers/{id}/toggle', [AdminCustomerController::class, 'toggleStatus'])->name('customers.toggle');
         Route::get('customers/{id}/orders', [AdminCustomerOrderController::class, 'index'])->name('customers.orders.index');
         Route::get('customers/{id}/addresses', [AdminCustomerAddressController::class, 'index'])->name('customers.addresses.index');
+
+        // Marketplace - Vendors
+        Route::get('vendors', [VendorController::class, 'index'])->name('vendors.index');
+        Route::get('vendors/{vendor}', [VendorController::class, 'show'])->name('vendors.show');
+        Route::patch('vendors/{vendor}/status', [VendorController::class, 'updateStatus'])->name('vendors.status.update');
+
+        // Marketplace - Product moderation
+        Route::get('vendor-products', [VendorProductModerationController::class, 'index'])->name('vendor-products.index');
+        Route::patch('vendor-products/{vendorProduct}/moderate', [VendorProductModerationController::class, 'moderate'])
+            ->name('vendor-products.moderate');
+
+        // Marketplace - Payouts
+        Route::get('vendor-payouts', [VendorPayoutController::class, 'index'])->name('vendor-payouts.index');
+        Route::patch('vendor-payouts/{vendorPayout}/process', [VendorPayoutController::class, 'process'])
+            ->name('vendor-payouts.process');
+
+        // Marketplace - Disputes
+        Route::get('vendor-disputes', [VendorDisputeController::class, 'index'])->name('vendor-disputes.index');
+        Route::patch('vendor-disputes/{vendorDispute}', [VendorDisputeController::class, 'update'])->name('vendor-disputes.update');
 
         // Store Settings
         Route::prefix('settings')->name('settings.')->group(function () {

@@ -27,6 +27,12 @@ Route::get('/products/{slug}', function () {
     return view('product-detail');
 })->name('products.show');
 
+Route::view('/marketplace', 'marketplace')->name('marketplace.index');
+Route::view('/marketplace/search', 'marketplace')->name('marketplace.search');
+Route::view('/marketplace/vendors/{slug}', 'marketplace')->name('marketplace.vendors.show');
+Route::view('/marketplace/products/{slug}', 'marketplace')->name('marketplace.products.show');
+Route::view('/messages/{orderUuid}', 'marketplace')->name('messages.show');
+
 Route::get('/categories', function () {
     return view('categories');
 })->name('categories.index');
@@ -62,3 +68,4 @@ Route::middleware('auth:customer')->group(function () {
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
+require __DIR__.'/vendor.php';

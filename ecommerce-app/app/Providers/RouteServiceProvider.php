@@ -21,6 +21,11 @@ class RouteServiceProvider extends ServiceProvider
     public const ADMIN_HOME = '/admin/dashboard';
 
     /**
+     * Redirección tras login de vendedor (panel vendor).
+     */
+    public const VENDOR_HOME = '/vendor/dashboard';
+
+    /**
      * Define your route model bindings, pattern filters, and other route configuration.
      */
     public function boot(): void

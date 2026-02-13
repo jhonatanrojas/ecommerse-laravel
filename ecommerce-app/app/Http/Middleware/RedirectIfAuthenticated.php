@@ -23,7 +23,9 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
                 $redirect = ($guard === 'admin')
                     ? route('admin.dashboard')
-                    : RouteServiceProvider::HOME;
+                    : (($guard === 'vendor')
+                        ? route('vendor.dashboard')
+                        : RouteServiceProvider::HOME);
 
                 // Si ya está autenticado pero llegó con ?redirect= (ej. desde enlace /login?redirect=/checkout)
                 $intended = $request->query('redirect');

@@ -121,6 +121,14 @@ class User extends Authenticatable
         return $this->hasOne(Customer::class);
     }
 
+    /**
+     * Get vendor profile for the user.
+     */
+    public function vendor(): HasOne
+    {
+        return $this->hasOne(Vendor::class);
+    }
+
 
     /**
      * Get the carts for the user.
@@ -152,6 +160,14 @@ class User extends Authenticatable
     public function wishlist(): HasMany
     {
         return $this->hasMany(Wishlist::class);
+    }
+
+    /**
+     * Product questions posted by the user.
+     */
+    public function productQuestions(): HasMany
+    {
+        return $this->hasMany(ProductQuestion::class);
     }
 
     /**

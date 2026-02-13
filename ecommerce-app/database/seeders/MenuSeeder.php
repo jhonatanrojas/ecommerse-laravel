@@ -10,201 +10,274 @@ class MenuSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Header Menu
-        $header = Menu::create([
-            'key' => 'header',
-            'name' => 'Menú Principal',
-            'location' => 'header',
-            'is_active' => true,
-        ]);
+        $header = $this->upsertMenu('header', 'Menu Principal', 'header');
+        $this->syncHeaderItems($header);
 
-        $this->createHeaderItems($header);
+        $footer = $this->upsertMenu('footer', 'Pie de Pagina', 'footer');
+        $this->syncFooterItems($footer);
 
-        // 2. Footer Menu
-        $footer = Menu::create([
-            'key' => 'footer',
-            'name' => 'Pie de Página',
-            'location' => 'footer',
-            'is_active' => true,
-        ]);
-
-        $this->createFooterItems($footer);
-
-        // 3. Mobile Menu
-        $mobile = Menu::create([
-            'key' => 'mobile',
-            'name' => 'Menú Móvil',
-            'location' => 'mobile',
-            'is_active' => true,
-        ]);
-
-        $this->createMobileItems($mobile);
+        $mobile = $this->upsertMenu('mobile', 'Menu Movil', 'mobile');
+        $this->syncMobileItems($mobile);
     }
 
-    private function createHeaderItems(Menu $menu)
+    private function upsertMenu(string $key, string $name, string $location): Menu
     {
-        // Inicio
-        MenuItem::create([
-            'menu_id' => $menu->id,
-            'label' => 'Inicio',
-            'url' => '/',
-            'type' => 'internal',
-            'order' => 1,
-        ]);
+        $menu = Menu::withTrashed()->updateOrCreate(
+            ['key' => $key],
+            [
+                'name' => $name,
+                'location' => $location,
+                'is_active' => true,
+            ]
+        );
 
-        // Tienda
-        $products = MenuItem::create([
-            'menu_id' => $menu->id,
-            'label' => 'Tienda',
-            'url' => '/products',
-            'type' => 'internal',
-            'order' => 2,
-        ]);
+        if ($menu->trashed()) {
+            $menu->restore();
+        }
 
-        // Subitems Productos
-        $subItems = [
-            ['label' => 'Electrónicos', 'url' => '/categories/electronica', 'order' => 1],
+        return $menu;
+    }
+
+    private function upsertItem(array $match, array $values): MenuItem
+    {
+        $item = MenuItem::withTrashed()->updateOrCreate($match, $values);
+
+        if ($item->trashed()) {
+            $item->restore();
+        }
+
+        return $item;
+    }
+
+    private function removeStaleItems(Menu $menu, array $keepIds): void
+    {
+        MenuItem::where('menu_id', $menu->id)
+            ->whereNotIn('id', $keepIds)
+            ->delete();
+    }
+
+    private function syncHeaderItems(Menu $menu): void
+    {
+        $keep = [];
+
+        $home = $this->upsertItem(
+            ['menu_id' => $menu->id, 'parent_id' => null, 'label' => 'Inicio'],
+            [
+                'url' => '/',
+                'type' => 'internal',
+                'order' => 1,
+                'depth' => 0,
+                'is_active' => true,
+            ]
+        );
+        $keep[] = $home->id;
+
+        $marketplace = $this->upsertItem(
+            ['menu_id' => $menu->id, 'parent_id' => null, 'label' => 'Marketplace'],
+            [
+                'url' => '/marketplace',
+                'type' => 'internal',
+                'order' => 2,
+                'depth' => 0,
+                'is_active' => true,
+                'badge_text' => 'Nuevo',
+                'badge_color' => '#2563EB',
+            ]
+        );
+        $keep[] = $marketplace->id;
+
+        $products = $this->upsertItem(
+            ['menu_id' => $menu->id, 'parent_id' => null, 'label' => 'Tienda'],
+            [
+                'url' => '/products',
+                'type' => 'internal',
+                'order' => 3,
+                'depth' => 0,
+                'is_active' => true,
+            ]
+        );
+        $keep[] = $products->id;
+
+        $productChildren = [
+            ['label' => 'Electronica', 'url' => '/categories/electronica', 'order' => 1],
             ['label' => 'Ropa y Moda', 'url' => '/categories/ropa-y-moda', 'order' => 2],
-            ['label' => 'Hogar y Jardín', 'url' => '/categories/hogar-y-jardin', 'order' => 3],
+            ['label' => 'Hogar y Jardin', 'url' => '/categories/hogar-y-jardin', 'order' => 3],
+            ['label' => 'Ofertas', 'url' => '/deals', 'order' => 4],
         ];
 
-        foreach ($subItems as $item) {
-            MenuItem::create([
-                'menu_id' => $menu->id,
-                'parent_id' => $products->id,
-                'label' => $item['label'],
-                'url' => $item['url'],
-                'type' => 'internal',
-                'order' => $item['order'],
-                'depth' => 1,
-            ]);
+        foreach ($productChildren as $child) {
+            $item = $this->upsertItem(
+                ['menu_id' => $menu->id, 'parent_id' => $products->id, 'label' => $child['label']],
+                [
+                    'url' => $child['url'],
+                    'type' => 'internal',
+                    'order' => $child['order'],
+                    'depth' => 1,
+                    'is_active' => true,
+                ]
+            );
+            $keep[] = $item->id;
         }
 
-        // Ofertas
-        MenuItem::create([
-            'menu_id' => $menu->id,
-            'label' => 'Ofertas',
-            'url' => '/deals',
-            'type' => 'internal',
-            'order' => 3,
-            'badge_text' => 'Hot',
-            'badge_color' => 'red',
-        ]);
+        $sell = $this->upsertItem(
+            ['menu_id' => $menu->id, 'parent_id' => null, 'label' => 'Vender'],
+            [
+                'url' => '/marketplace/vendors/register',
+                'type' => 'internal',
+                'order' => 4,
+                'depth' => 0,
+                'is_active' => true,
+            ]
+        );
+        $keep[] = $sell->id;
 
-        // Contacto
-        MenuItem::create([
-            'menu_id' => $menu->id,
-            'label' => 'Contacto',
-            'url' => '/contact',
-            'type' => 'internal',
-            'order' => 4,
-        ]);
+        $support = $this->upsertItem(
+            ['menu_id' => $menu->id, 'parent_id' => null, 'label' => 'Ayuda'],
+            [
+                'url' => '/contact',
+                'type' => 'internal',
+                'order' => 5,
+                'depth' => 0,
+                'is_active' => true,
+            ]
+        );
+        $keep[] = $support->id;
+
+        $this->removeStaleItems($menu, $keep);
     }
 
-    private function createFooterItems(Menu $menu)
+    private function syncFooterItems(Menu $menu): void
     {
-        // Información
-        $info = MenuItem::create([
-            'menu_id' => $menu->id,
-            'label' => 'Información',
-            'url' => '#',
-            'type' => 'custom',
-            'order' => 1,
-        ]);
+        $keep = [];
 
-        $infoItems = [
-            ['label' => 'Sobre Nosotros', 'url' => '/pages/about'],
-            ['label' => 'Blog', 'url' => '/blog'],
-            ['label' => 'Testimonios', 'url' => '/testimonials'],
+        $about = $this->upsertItem(
+            ['menu_id' => $menu->id, 'parent_id' => null, 'label' => 'Nosotros'],
+            [
+                'url' => '#',
+                'type' => 'custom',
+                'order' => 1,
+                'depth' => 0,
+                'is_active' => true,
+            ]
+        );
+        $keep[] = $about->id;
+
+        $aboutChildren = [
+            ['label' => 'Sobre nosotros', 'url' => '/pages/about', 'order' => 1],
+            ['label' => 'Marketplace', 'url' => '/marketplace', 'order' => 2],
+            ['label' => 'Vender en la plataforma', 'url' => '/marketplace/vendors/register', 'order' => 3],
         ];
 
-        foreach ($infoItems as $index => $item) {
-            MenuItem::create([
-                'menu_id' => $menu->id,
-                'parent_id' => $info->id,
-                'label' => $item['label'],
-                'url' => $item['url'],
-                'type' => 'internal',
-                'order' => $index + 1,
-                'depth' => 1,
-            ]);
+        foreach ($aboutChildren as $child) {
+            $item = $this->upsertItem(
+                ['menu_id' => $menu->id, 'parent_id' => $about->id, 'label' => $child['label']],
+                [
+                    'url' => $child['url'],
+                    'type' => 'internal',
+                    'order' => $child['order'],
+                    'depth' => 1,
+                    'is_active' => true,
+                ]
+            );
+            $keep[] = $item->id;
         }
 
-        // Servicio al Cliente
-        $service = MenuItem::create([
-            'menu_id' => $menu->id,
-            'label' => 'Servicio al Cliente',
-            'url' => '#',
-            'type' => 'custom',
-            'order' => 2,
-        ]);
+        $support = $this->upsertItem(
+            ['menu_id' => $menu->id, 'parent_id' => null, 'label' => 'Soporte'],
+            [
+                'url' => '#',
+                'type' => 'custom',
+                'order' => 2,
+                'depth' => 0,
+                'is_active' => true,
+            ]
+        );
+        $keep[] = $support->id;
 
-        $serviceItems = [
-            ['label' => 'Contacto', 'url' => '/contact'],
-            ['label' => 'FAQ', 'url' => '/faq'],
-            ['label' => 'Envíos', 'url' => '/shipping'],
-            ['label' => 'Devoluciones', 'url' => '/returns'],
+        $supportChildren = [
+            ['label' => 'Centro de ayuda', 'url' => '/contact', 'order' => 1],
+            ['label' => 'Envios', 'url' => '/shipping', 'order' => 2],
+            ['label' => 'Devoluciones', 'url' => '/returns', 'order' => 3],
+            ['label' => 'Mis pedidos', 'url' => '/customer/orders', 'order' => 4],
         ];
 
-        foreach ($serviceItems as $index => $item) {
-            MenuItem::create([
-                'menu_id' => $menu->id,
-                'parent_id' => $service->id,
-                'label' => $item['label'],
-                'url' => $item['url'],
-                'type' => 'internal',
-                'order' => $index + 1,
-                'depth' => 1,
-            ]);
+        foreach ($supportChildren as $child) {
+            $item = $this->upsertItem(
+                ['menu_id' => $menu->id, 'parent_id' => $support->id, 'label' => $child['label']],
+                [
+                    'url' => $child['url'],
+                    'type' => 'internal',
+                    'order' => $child['order'],
+                    'depth' => 1,
+                    'is_active' => true,
+                ]
+            );
+            $keep[] = $item->id;
         }
 
-        // Legal
-        $legal = MenuItem::create([
-            'menu_id' => $menu->id,
-            'label' => 'Legal',
-            'url' => '#',
-            'type' => 'custom',
-            'order' => 3,
-        ]);
+        $legal = $this->upsertItem(
+            ['menu_id' => $menu->id, 'parent_id' => null, 'label' => 'Legal'],
+            [
+                'url' => '#',
+                'type' => 'custom',
+                'order' => 3,
+                'depth' => 0,
+                'is_active' => true,
+            ]
+        );
+        $keep[] = $legal->id;
 
-        $legalItems = [
-            ['label' => 'Términos y Condiciones', 'url' => '/pages/terminos-y-condiciones'],
-            ['label' => 'Política de Privacidad', 'url' => '/privacy'],
-            ['label' => 'Cookies', 'url' => '/cookies'],
+        $legalChildren = [
+            ['label' => 'Terminos y Condiciones', 'url' => '/pages/terminos-y-condiciones', 'order' => 1],
+            ['label' => 'Politica de Privacidad', 'url' => '/privacy', 'order' => 2],
+            ['label' => 'Cookies', 'url' => '/cookies', 'order' => 3],
         ];
 
-        foreach ($legalItems as $index => $item) {
-            MenuItem::create([
-                'menu_id' => $menu->id,
-                'parent_id' => $legal->id,
-                'label' => $item['label'],
-                'url' => $item['url'],
-                'type' => 'internal',
-                'order' => $index + 1,
-                'depth' => 1,
-            ]);
+        foreach ($legalChildren as $child) {
+            $item = $this->upsertItem(
+                ['menu_id' => $menu->id, 'parent_id' => $legal->id, 'label' => $child['label']],
+                [
+                    'url' => $child['url'],
+                    'type' => 'internal',
+                    'order' => $child['order'],
+                    'depth' => 1,
+                    'is_active' => true,
+                ]
+            );
+            $keep[] = $item->id;
         }
+
+        $this->removeStaleItems($menu, $keep);
     }
 
-    private function createMobileItems(Menu $menu)
+    private function syncMobileItems(Menu $menu): void
     {
+        $keep = [];
+
         $items = [
-            ['label' => 'Inicio', 'url' => '/', 'icon' => 'heroicon-home'],
-            ['label' => 'Tienda', 'url' => '/products', 'icon' => 'heroicon-shopping-bag'],
-            ['label' => 'Categorías', 'url' => '/categories', 'icon' => 'heroicon-squares-2x2'],
-            ['label' => 'Carrito', 'url' => '/cart', 'icon' => 'heroicon-shopping-cart'],
-            ['label' => 'Perfil', 'url' => '/profile', 'icon' => 'heroicon-user'],
+            ['label' => 'Inicio', 'url' => '/', 'icon' => 'heroicon-home', 'order' => 1],
+            ['label' => 'Marketplace', 'url' => '/marketplace', 'icon' => 'heroicon-building-storefront', 'order' => 2],
+            ['label' => 'Tienda', 'url' => '/products', 'icon' => 'heroicon-shopping-bag', 'order' => 3],
+            ['label' => 'Categorias', 'url' => '/categories', 'icon' => 'heroicon-squares-2x2', 'order' => 4],
+            ['label' => 'Mi cuenta', 'url' => '/customer', 'icon' => 'heroicon-user', 'order' => 5],
+            ['label' => 'Carrito', 'url' => '/cart', 'icon' => 'heroicon-shopping-cart', 'order' => 6],
         ];
 
-        foreach ($items as $index => $item) {
-            MenuItem::create([
-                'menu_id' => $menu->id,
-                'label' => $item['label'],
-                'url' => $item['url'],
-                'type' => 'internal',
-                'icon' => $item['icon'],
-                'order' => $index + 1,
-            ]);
+        foreach ($items as $item) {
+            $record = $this->upsertItem(
+                ['menu_id' => $menu->id, 'parent_id' => null, 'label' => $item['label']],
+                [
+                    'url' => $item['url'],
+                    'type' => 'internal',
+                    'icon' => $item['icon'],
+                    'order' => $item['order'],
+                    'depth' => 0,
+                    'is_active' => true,
+                ]
+            );
+            $keep[] = $record->id;
         }
+
+        $this->removeStaleItems($menu, $keep);
     }
 }
