@@ -115,14 +115,18 @@ class OrderService implements OrderServiceInterface
         try {
             $allOrders = $this->repository->all();
 
+            $statusCount = fn (string $slug) => $allOrders->filter(
+                fn ($order) => ($order->orderStatus?->slug ?? $order->status?->value ?? (string) $order->status) === $slug
+            )->count();
+
             return [
                 'total' => $allOrders->count(),
-                'pending' => $allOrders->where('status', 'pending')->count(),
-                'processing' => $allOrders->where('status', 'processing')->count(),
-                'shipped' => $allOrders->where('status', 'shipped')->count(),
-                'delivered' => $allOrders->where('status', 'delivered')->count(),
-                'cancelled' => $allOrders->where('status', 'cancelled')->count(),
-                'returned' => $allOrders->where('status', 'returned')->count(),
+                'pending' => $statusCount('pending'),
+                'processing' => $statusCount('processing'),
+                'shipped' => $statusCount('shipped'),
+                'delivered' => $statusCount('delivered'),
+                'cancelled' => $statusCount('cancelled'),
+                'returned' => $statusCount('returned'),
                 'total_revenue' => $allOrders->where('payment_status', 'paid')->sum('total'),
                 'average_order_value' => $allOrders->where('payment_status', 'paid')->avg('total'),
             ];

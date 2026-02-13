@@ -11,6 +11,7 @@ use App\Exceptions\Cart\InsufficientStockException;
 use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\OrderStatus as OrderStatusModel;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\Cart\DTOs\CheckoutData;
@@ -247,10 +248,12 @@ class CheckoutService
         $total = $subtotal - $discount + $tax + $shippingCost;
 
         // Create the order
+        $defaultOrderStatus = OrderStatusModel::query()->default()->first();
         $order = Order::create([
             'user_id' => $cart->user_id,
             'order_number' => $orderNumber,
             'status' => OrderStatus::Pending,
+            'order_status_id' => $defaultOrderStatus?->id,
             'payment_status' => PaymentStatus::Pending,
             'subtotal' => $subtotal,
             'discount' => $discount,

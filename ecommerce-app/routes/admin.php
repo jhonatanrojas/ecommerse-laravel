@@ -1,7 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Admin\AdminOrderShippingStatusUpdateController;
+use App\Http\Controllers\Admin\AdminOrderStatusController;
+use App\Http\Controllers\Admin\AdminOrderStatusUpdateController;
 use App\Http\Controllers\Admin\AdminPaymentMethodController;
+use App\Http\Controllers\Admin\AdminShippingStatusController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
@@ -54,6 +58,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Update payment status
         Route::patch('orders/{uuid}/payment-status', [\App\Http\Controllers\Admin\OrderController::class, 'updatePaymentStatus'])
             ->name('orders.payment-status.update');
+        Route::patch('orders/{uuid}/status', [AdminOrderStatusUpdateController::class, 'update'])
+            ->name('orders.status.update');
 
         // Users CRUD
         Route::resource('users', UserController::class);
@@ -83,6 +89,38 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->name('payment-methods.toggle');
         Route::delete('payment-methods/{payment_method}', [AdminPaymentMethodController::class, 'destroy'])
             ->name('payment-methods.destroy');
+
+        // Order statuses (admin)
+        Route::get('order-statuses', [AdminOrderStatusController::class, 'index'])
+            ->name('order-statuses.index');
+        Route::post('order-statuses', [AdminOrderStatusController::class, 'store'])
+            ->name('order-statuses.store');
+        Route::put('order-statuses/{id}', [AdminOrderStatusController::class, 'update'])
+            ->name('order-statuses.update');
+        Route::patch('order-statuses/{id}/toggle', [AdminOrderStatusController::class, 'toggleStatus'])
+            ->name('order-statuses.toggle');
+        Route::patch('order-statuses/{id}/default', [AdminOrderStatusController::class, 'setDefault'])
+            ->name('order-statuses.default');
+        Route::delete('order-statuses/{id}', [AdminOrderStatusController::class, 'destroy'])
+            ->name('order-statuses.destroy');
+
+        // Shipping statuses (admin)
+        Route::get('shipping-statuses', [AdminShippingStatusController::class, 'index'])
+            ->name('shipping-statuses.index');
+        Route::post('shipping-statuses', [AdminShippingStatusController::class, 'store'])
+            ->name('shipping-statuses.store');
+        Route::put('shipping-statuses/{id}', [AdminShippingStatusController::class, 'update'])
+            ->name('shipping-statuses.update');
+        Route::patch('shipping-statuses/{id}/toggle', [AdminShippingStatusController::class, 'toggleStatus'])
+            ->name('shipping-statuses.toggle');
+        Route::patch('shipping-statuses/{id}/default', [AdminShippingStatusController::class, 'setDefault'])
+            ->name('shipping-statuses.default');
+        Route::delete('shipping-statuses/{id}', [AdminShippingStatusController::class, 'destroy'])
+            ->name('shipping-statuses.destroy');
+
+        // Update shipping status from order
+        Route::patch('orders/{uuid}/shipping-status', [AdminOrderShippingStatusUpdateController::class, 'update'])
+            ->name('orders.shipping-status.update');
 
         // Home Sections
         Route::post('home-sections/reorder', [\App\Http\Controllers\Admin\HomeSectionController::class, 'reorder'])

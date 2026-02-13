@@ -144,35 +144,87 @@
     <!-- Columna Lateral -->
     <div class="space-y-6">
         
-        <!-- Estado de la Orden -->
+        <!-- Estatus de la Orden -->
         <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-            <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Estado de la Orden</h2>
+            <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Estatus de la Orden</h2>
             
-            <form method="POST" action="{{ route('admin.orders.update', $order->uuid) }}">
+            <form method="POST" action="{{ route('admin.orders.status.update', $order->uuid) }}">
                 @csrf
-                @method('PUT')
+                @method('PATCH')
                 
                 <div class="mb-4">
                     <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Estado Actual</label>
-                    @include('admin.orders.partials.status-badge', ['status' => $order->status])
+                    @include('admin.orders.partials.status-badge', ['status' => $order->orderStatus ?? $order->status])
                 </div>
 
                 @if(count($availableStatuses) > 0)
                 <div class="mb-4">
-                    <label for="status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cambiar a:</label>
-                    <select id="status" name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <label for="order_status_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cambiar a:</label>
+                    <select id="order_status_id" name="order_status_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="">Seleccionar...</option>
-                        @foreach($availableStatuses as $status)
-                            <option value="{{ $status->value }}">{{ ucfirst($status->value) }}</option>
+                        @foreach($availableStatuses as $statusOption)
+                            <option value="{{ $statusOption->id }}" {{ (int) old('order_status_id') === $statusOption->id ? 'selected' : '' }}>
+                                {{ $statusOption->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
 
                 <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-                    Actualizar Estado
+                    Actualizar estatus
                 </button>
                 @else
                 <p class="text-sm text-gray-500 dark:text-gray-400">No hay cambios de estado disponibles</p>
+                @endif
+            </form>
+        </div>
+
+        <!-- Estatus de Envío -->
+        <div class="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Estatus de Envío</h2>
+            
+            <form method="POST" action="{{ route('admin.orders.shipping-status.update', $order->uuid) }}">
+                @csrf
+                @method('PATCH')
+                
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Estado Actual</label>
+                    @if($order->shippingStatus)
+                        <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full" style="background-color: {{ $order->shippingStatus->color }}22; color: {{ $order->shippingStatus->color }};">
+                            <span class="w-2 h-2 rounded-full mr-2" style="background-color: {{ $order->shippingStatus->color }};"></span>
+                            {{ $order->shippingStatus->name }}
+                        </span>
+                    @else
+                        <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-700">
+                            Sin estatus
+                        </span>
+                    @endif
+                </div>
+
+                @php
+                    $availableShippingStatuses = \App\Models\ShippingStatus::active()->ordered()->get();
+                @endphp
+
+                @if($availableShippingStatuses->count() > 0)
+                <div class="mb-4">
+                    <label for="shipping_status_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cambiar a:</label>
+                    <select id="shipping_status_id" name="shipping_status_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">Seleccionar...</option>
+                        @foreach($availableShippingStatuses as $statusOption)
+                            <option value="{{ $statusOption->id }}" 
+                                    {{ (int) old('shipping_status_id', $order->shipping_status_id) === $statusOption->id ? 'selected' : '' }}
+                                    data-color="{{ $statusOption->color }}">
+                                {{ $statusOption->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full text-white bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-purple-600 dark:hover:bg-purple-700 focus:outline-none dark:focus:ring-purple-800">
+                    Actualizar estatus de envío
+                </button>
+                @else
+                <p class="text-sm text-gray-500 dark:text-gray-400">No hay estatus de envío configurados</p>
                 @endif
             </form>
         </div>
@@ -304,7 +356,7 @@
         </div>
 
         <!-- Acciones -->
-        @if(in_array(\App\Enums\OrderStatus::Cancelled->value, array_map(fn($s) => $s->value, $availableStatuses)))
+        @if(collect($availableStatuses)->contains(fn($s) => ($s->slug ?? $s->value ?? null) === \App\Enums\OrderStatus::Cancelled->value))
         <form method="POST" action="{{ route('admin.orders.destroy', $order->uuid) }}" onsubmit="return confirm('¿Estás seguro de que deseas cancelar esta orden?');">
             @csrf
             @method('DELETE')

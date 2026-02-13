@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\OrderStatus;
+use App\Enums\OrderStatus as OrderStatusEnum;
 use App\Enums\PaymentStatus;
 use App\Models\Traits\HasAuditFields;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -11,13 +11,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * @property int $id
  * @property string $uuid
  * @property int $user_id
  * @property string $order_number
- * @property OrderStatus $status
+ * @property OrderStatusEnum $status
  * @property PaymentStatus $payment_status
  * @property float $subtotal
  * @property float $discount
@@ -56,6 +57,8 @@ class Order extends Model
         'user_id',
         'order_number',
         'status',
+        'order_status_id',
+        'shipping_status_id',
         'payment_status',
         'subtotal',
         'discount',
@@ -83,7 +86,7 @@ class Order extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'status' => OrderStatus::class,
+        'status' => OrderStatusEnum::class,
         'payment_status' => PaymentStatus::class,
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
@@ -146,10 +149,71 @@ class Order extends Model
     }
 
     /**
+     * Get the configured order status for this order.
+     */
+    public function orderStatus(): BelongsTo
+    {
+        return $this->belongsTo(OrderStatus::class);
+    }
+
+    /**
+     * Get the configured shipping status for this order.
+     */
+    public function shippingStatus(): BelongsTo
+    {
+        return $this->belongsTo(ShippingStatus::class);
+    }
+
+    /**
      * Get the payments for the order.
      */
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Set order status from admin-configured status catalog.
+     */
+    public function setStatus(OrderStatus $status): self
+    {
+        $this->order_status_id = $status->id;
+
+        try {
+            $this->status = OrderStatusEnum::from($status->slug);
+            match ($this->status) {
+                OrderStatusEnum::Shipped => $this->shipped_at = now(),
+                OrderStatusEnum::Delivered => $this->delivered_at = now(),
+                OrderStatusEnum::Cancelled => $this->cancelled_at = now(),
+                default => null,
+            };
+        } catch (\ValueError) {
+            // Keep backward compatibility when slug has no enum equivalent.
+        }
+
+        if (Auth::guard('admin')->check()) {
+            $this->updated_by = Auth::guard('admin')->user()?->uuid;
+        }
+
+        $this->save();
+
+        return $this;
+    }
+
+    /**
+     * Set shipping status from admin-configured status catalog.
+     */
+    public function setShippingStatus(ShippingStatus $status): self
+    {
+        $this->shipping_status_id = $status->id;
+        $this->save();
+
+        return $this;
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === PaymentStatus::Paid
+            || $this->payments()->where('status', 'completed')->exists();
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enums\OrderStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,7 +30,7 @@ class FilterOrderRequest extends FormRequest
             'status' => [
                 'sometimes',
                 'nullable',
-                Rule::enum(OrderStatus::class),
+                Rule::exists('order_statuses', 'slug'),
             ],
             'start_date' => [
                 'sometimes',
@@ -88,7 +87,7 @@ class FilterOrderRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'status.enum' => 'El :attribute seleccionado no es válido.',
+            'status.exists' => 'El :attribute seleccionado no es válido.',
             'start_date.date' => 'La :attribute debe ser una fecha válida.',
             'start_date.before_or_equal' => 'La :attribute debe ser anterior o igual a la fecha de fin.',
             'end_date.date' => 'La :attribute debe ser una fecha válida.',

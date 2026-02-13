@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FilterOrderRequest;
 use App\Http\Requests\Admin\UpdateOrderRequest;
+use App\Models\OrderStatus as OrderStatusModel;
 use App\Services\Contracts\OrderServiceInterface;
 use App\Services\Contracts\OrderStatusServiceInterface;
 use Illuminate\Http\RedirectResponse;
@@ -44,7 +45,7 @@ class OrderController extends Controller
 
         $orders = $this->orderService->getPaginatedOrders($perPage, $filters);
         $statistics = $this->orderService->getOrderStatistics();
-        $statuses = $this->statusService->getAllStatuses();
+        $statuses = OrderStatusModel::query()->orderBy('name')->get();
 
         return view('admin.orders.index', compact('orders', 'statistics', 'statuses', 'filters'));
     }
@@ -60,7 +61,10 @@ class OrderController extends Controller
             abort(404, 'Orden no encontrada');
         }
 
-        $availableStatuses = $this->statusService->getAvailableStatuses($order);
+        $availableStatuses = OrderStatusModel::query()
+            ->active()
+            ->orderBy('name')
+            ->get();
 
         // Obtener el pago más reciente de la orden
         $payment = $order->payments()->latest()->first();

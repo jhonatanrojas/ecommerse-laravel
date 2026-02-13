@@ -25,7 +25,7 @@ class EloquentOrderRepository implements OrderRepositoryInterface
     public function all(): Collection
     {
         return $this->model
-            ->with(['user', 'items.product', 'shippingAddress', 'billingAddress'])
+            ->with(['user', 'items.product', 'shippingAddress', 'billingAddress', 'orderStatus', 'shippingStatus'])
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -33,11 +33,20 @@ class EloquentOrderRepository implements OrderRepositoryInterface
     public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         $query = $this->model
-            ->with(['user', 'items.product', 'shippingAddress', 'billingAddress']);
+            ->with(['user', 'items.product', 'shippingAddress', 'billingAddress', 'orderStatus', 'shippingStatus']);
 
         // Filtro por estado
         if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+            $query->where(function ($statusQuery) use ($filters) {
+                $statusQuery
+                    ->whereHas('orderStatus', function ($q) use ($filters) {
+                        $q->where('slug', $filters['status']);
+                    })
+                    ->orWhere(function ($q) use ($filters) {
+                        $q->whereNull('order_status_id')
+                            ->where('status', $filters['status']);
+                    });
+                });
         }
 
         // Filtro por rango de fechas
@@ -68,7 +77,7 @@ class EloquentOrderRepository implements OrderRepositoryInterface
     public function findByUuid(string $uuid): ?Order
     {
         return $this->model
-            ->with(['user', 'items.product', 'shippingAddress', 'billingAddress', 'payments'])
+            ->with(['user', 'items.product', 'shippingAddress', 'billingAddress', 'payments', 'orderStatus', 'shippingStatus'])
             ->where('uuid', $uuid)
             ->first();
     }
@@ -76,7 +85,7 @@ class EloquentOrderRepository implements OrderRepositoryInterface
     public function findByOrderNumber(string $orderNumber): ?Order
     {
         return $this->model
-            ->with(['user', 'items.product', 'shippingAddress', 'billingAddress'])
+            ->with(['user', 'items.product', 'shippingAddress', 'billingAddress', 'orderStatus', 'shippingStatus'])
             ->where('order_number', $orderNumber)
             ->first();
     }
@@ -106,8 +115,8 @@ class EloquentOrderRepository implements OrderRepositoryInterface
     public function getByStatus(string $status): Collection
     {
         return $this->model
-            ->with(['user', 'items.product'])
-            ->where('status', $status)
+            ->with(['user', 'items.product', 'orderStatus'])
+            ->whereHas('orderStatus', fn ($q) => $q->where('slug', $status))
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -124,7 +133,7 @@ class EloquentOrderRepository implements OrderRepositoryInterface
     public function getByUser(int $userId): Collection
     {
         return $this->model
-            ->with(['items.product', 'shippingAddress', 'billingAddress'])
+            ->with(['items.product', 'shippingAddress', 'billingAddress', 'orderStatus', 'shippingStatus'])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();

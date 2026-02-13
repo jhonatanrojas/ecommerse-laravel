@@ -17,11 +17,16 @@
         'returned' => 'Devuelto',
     ];
 
-    $statusValue = is_object($status) ? $status->value : $status;
+    $statusValue = is_object($status) ? ($status->slug ?? $status->value ?? null) : $status;
+    $statusName = is_object($status) ? ($status->name ?? null) : null;
+    $statusColor = is_object($status) ? ($status->color ?? null) : null;
+    $statusColor = is_string($statusColor) && preg_match('/^#?[A-Fa-f0-9]{6}$/', $statusColor)
+        ? '#' . ltrim($statusColor, '#')
+        : null;
     $class = $statusClasses[$statusValue] ?? 'bg-gray-100 text-gray-800';
-    $label = $statusLabels[$statusValue] ?? ucfirst($statusValue);
+    $label = $statusName ?? ($statusLabels[$statusValue] ?? ucfirst((string) $statusValue));
 @endphp
 
-<span class="text-xs font-medium px-2.5 py-0.5 rounded {{ $class }}">
+<span class="text-xs font-medium px-2.5 py-0.5 rounded {{ $statusColor ? '' : $class }}" @if($statusColor) style="background-color: {{ $statusColor }}22; color: {{ $statusColor }};" @endif>
     {{ $label }}
 </span>

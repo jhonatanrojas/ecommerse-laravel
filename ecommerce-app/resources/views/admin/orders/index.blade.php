@@ -63,8 +63,8 @@
             <select id="status" name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                 <option value="">Todos</option>
                 @foreach($statuses as $status)
-                    <option value="{{ $status->value }}" {{ request('status') === $status->value ? 'selected' : '' }}>
-                        {{ ucfirst($status->value) }}
+                    <option value="{{ $status->slug }}" {{ request('status') === $status->slug ? 'selected' : '' }}>
+                        {{ $status->name }}
                     </option>
                 @endforeach
             </select>
@@ -139,7 +139,7 @@
                     ${{ number_format($order->total, 2) }}
                 </td>
                 <td class="px-6 py-4">
-                    @include('admin.orders.partials.status-badge', ['status' => $order->status])
+                    @include('admin.orders.partials.status-badge', ['status' => $order->orderStatus ?? $order->status])
                 </td>
                 <td class="px-6 py-4">
                     @include('admin.orders.partials.payment-badge', ['status' => $order->payment_status])
